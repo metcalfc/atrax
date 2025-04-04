@@ -20,6 +20,7 @@ import { AuthProvider } from './auth/auth-provider.js';
 import { setupAuth } from './auth/index.js';
 import { AtraxConfig } from '../types/config.js';
 import { createContextLogger } from '../utils/logger.js';
+import { displayLogo } from '../utils/logo.js';
 import { McpServer } from './mcp/mcp-server.js';
 import { ResourceConflictStrategy } from './mcp/types.js';
 
@@ -246,9 +247,11 @@ export class AtraxServer {
           reject(error);
         });
 
-        this.server.listen(port, host, () => {
+        this.server.listen(port, host, async () => {
           // Log better debugging information
           const actualHost = host === '0.0.0.0' ? 'localhost' : host;
+          // Display the ASCII art logo
+          await displayLogo();
           logger.info(`=== Atrax Server Running ===`);
           logger.info(`Server listening on http://${actualHost}:${port}`);
           logger.info(`Health check: http://${actualHost}:${port}/health`);

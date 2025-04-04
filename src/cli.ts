@@ -3,6 +3,7 @@
 import { program } from 'commander';
 import { loadConfig } from './config/config-loader.js';
 import { createContextLogger } from './utils/logger.js';
+import { displayLogo } from './utils/logo.js';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { McpServerEvent } from './server/mcp/mcp-server.js';
@@ -21,6 +22,8 @@ const logger = createContextLogger('CLI');
  */
 async function serveHttp(configPath: string): Promise<void> {
   try {
+    // Display the ASCII art logo
+    await displayLogo();
     logger.info(`Loading configuration from ${configPath}`);
     // Load configuration
     const config = await loadConfig(configPath);
@@ -66,6 +69,8 @@ async function serveHttp(configPath: string): Promise<void> {
  */
 async function generateConfig(outputPath: string): Promise<void> {
   try {
+    // Display the ASCII art logo
+    await displayLogo();
     const defaultConfig = {
       port: 3000,
       host: 'localhost',

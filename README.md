@@ -1,4 +1,16 @@
-# Atrax: MCP Server Aggregation Proxy
+# Atrax: MCP Server Aggregation Proxy v0.1.0
+
+```
+              .  .               __
+             .|  |.      _____ _/  |_____________  ___  ___
+             ||  ||      \__  \\   __\_  __ \__  \ \  \/  /
+             \\()//       / __ \|  |  |  | \// __ \_>    <
+             .={}=.      (____  /__|  |__|  (____  /__/\_ \
+            / /`'\ \          \/                 \/      \/
+            ` \  / '
+               `'           MCP PROXY FOR THE WEB v0.1.0
+
+```
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
 
