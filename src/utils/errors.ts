@@ -129,17 +129,18 @@ export function createErrorResponse(
 /**
  * Create a standard JSON-RPC success response object
  *
+ * @template T The type of the result object
  * @param msgId - Message ID from the request
  * @param result - Result data
  * @returns JSON-RPC success response object
  */
-export function createSuccessResponse(
+export function createSuccessResponse<T extends Record<string, unknown>>(
   msgId: string | number | null,
-  result: Record<string, unknown>
+  result: T
 ): {
   jsonrpc: '2.0';
   id: string | number;
-  result: Record<string, unknown>;
+  result: T;
 } {
   return {
     jsonrpc: '2.0',
@@ -222,6 +223,7 @@ export function serverUnavailableError(serverId: string): McpError {
 /**
  * Execute function with error handling
  *
+ * @template T The type of the result object
  * @param fn - Async function to execute
  * @param msgId - Message ID from the request (for error responses)
  * @param context - Context for logging
@@ -236,8 +238,6 @@ export async function executeWithErrorHandling<T extends Record<string, unknown>
     const result = await fn();
     return createSuccessResponse(msgId, result);
   } catch (error) {
-    const contextLogger = context ? createContextLogger(context) : logger;
-
     // Convert to McpError and log
     const mcpError = toMcpError(error);
     mcpError.log(context);

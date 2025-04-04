@@ -98,15 +98,17 @@ async function aggregateCollection(
         serverResponse &&
         typeof serverResponse === 'object' &&
         collectionKey in serverResponse &&
-        Array.isArray(serverResponse[collectionKey])
+        Array.isArray((serverResponse as Record<string, unknown>)[collectionKey])
       ) {
         // Add server identifier to each item for routing
-        const serverItems = (serverResponse[collectionKey] as Array<Record<string, unknown>>).map(
-          item => ({
-            ...item,
-            _serverName: serverId, // Use underscore to hide from clients
-          })
-        );
+        const serverItems = (
+          (serverResponse as Record<string, unknown>)[collectionKey] as Array<
+            Record<string, unknown>
+          >
+        ).map(item => ({
+          ...item,
+          _serverName: serverId, // Use underscore to hide from clients
+        }));
 
         allItems.push(...serverItems);
         logger.info(`Found ${serverItems.length} ${collectionKey} from server ${serverId}`);
@@ -522,6 +524,7 @@ export class McpProxy extends EventEmitter {
 
               // Extract the message from the arguments with proper type checking
               const args =
+                message.params &&
                 'arguments' in message.params &&
                 message.params.arguments &&
                 typeof message.params.arguments === 'object'

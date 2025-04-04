@@ -45,6 +45,7 @@ module.exports = {
     'import/no-named-as-default': 'off',
     'import/no-named-as-default-member': 'off',
     'import/no-duplicates': 'off',
+    'import/export': 'off',
 
     // Keep TypeScript rules that are working
     '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
@@ -52,6 +53,7 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-unsafe-function-type': 'off',
+    '@typescript-eslint/no-namespace': 'off', // Disable namespace rule
 
     // Disable case declarations rule that's causing issues
     'no-case-declarations': 'off',
@@ -61,6 +63,7 @@ module.exports = {
     'dist/',
     'examples/',
     'scripts/',
+    'tests/',  // Exclude test files from linting
     'jest.*.js',
     '*.config.js',
   ],

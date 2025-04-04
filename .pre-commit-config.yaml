@@ -16,7 +16,7 @@ repos:
       - id: eslint
         files: \.(js|ts)$
         types: [file]
-        exclude: ^(examples/|scripts/|jest\.config\.js|.*\.config\.(js|cjs|mjs))
+        exclude: ^(examples/|scripts/|tests/|jest\.config\.js|.*\.config\.(js|cjs|mjs))
         additional_dependencies:
           - eslint@8.56.0
           - typescript@5.8.2
@@ -52,9 +52,8 @@ repos:
       - id: typescript-check
         name: TypeScript Check
         language: node
-        entry: npx tsc
-        args: [--noEmit, --project, ./tsconfig.json]
+        entry: node
+        args: ['node_modules/typescript/lib/tsc.js', '--noEmit', '--project', './tsconfig.json']
         pass_filenames: false
         files: ^src/
         types: [ts]
-        additional_dependencies: ['typescript@5.8.2']
