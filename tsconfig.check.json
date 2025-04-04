@@ -1,0 +1,14 @@
+{
+  /*
+   * This configuration is specifically for pre-commit TypeScript checks.
+   * We only check the src/ directory during pre-commit to avoid type errors
+   * in examples and tests that would unnecessarily block commits.
+   *
+   * The main tsconfig.json is used for building and includes all files
+   * needed for the full build, including examples that are required for
+   * integration tests.
+   */
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "examples/**/*", "tests/**/*"]
+}

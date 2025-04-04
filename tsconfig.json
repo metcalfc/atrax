@@ -21,6 +21,6 @@
     "allowJs": true,
     "moduleDetection": "force"
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "examples/**/*", "tests/**/*"]
+  "include": ["src/**/*", "examples/**/*", "tests/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -53,7 +53,8 @@ repos:
         name: TypeScript Check
         language: node
         entry: node
-        args: ['node_modules/typescript/lib/tsc.js', '--noEmit', '--project', './tsconfig.json']
+        args:
+          ['node_modules/typescript/lib/tsc.js', '--noEmit', '--project', './tsconfig.check.json']
         pass_filenames: false
         files: ^src/
         types: [ts]
