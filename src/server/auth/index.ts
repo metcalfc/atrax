@@ -14,14 +14,14 @@ const logger = createContextLogger('AuthModule');
 
 /**
  * Setup authentication for an Express application
- * 
+ *
  * @param app - Express application
  * @param authConfig - Authentication configuration
  * @param middlewareOptions - Additional middleware options
  * @returns The configured auth provider
  */
 export function setupAuth(
-  app: Application, 
+  app: Application,
   authConfig: AuthConfig | undefined,
   middlewareOptions: Partial<AuthMiddlewareOptions> = {}
 ): AuthProvider {
@@ -40,11 +40,11 @@ export function setupAuth(
       if (!authConfig.options?.token) {
         throw new Error('Token is required for token authentication');
       }
-      
+
       // The TokenAuthProvider constructor accepts userId and roles as additional params
       // but they're not part of TokenAuthOptions in the config
       authProvider = createAuthProvider('token', {
-        token: authConfig.options.token
+        token: authConfig.options.token,
       });
       break;
 
@@ -54,7 +54,7 @@ export function setupAuth(
       }
       authProvider = createAuthProvider('basic', {
         username: authConfig.options.username,
-        password: authConfig.options.password
+        password: authConfig.options.password,
       });
       break;
 
@@ -71,15 +71,15 @@ export function setupAuth(
   const fullMiddlewareOptions: AuthMiddlewareOptions = {
     // Default paths to bypass authentication
     bypassPaths: ['/health', '/status', '/auth'],
-    
+
     // Throw on failure by default
     throwOnFailure: true,
-    
+
     // Enable CORS by default for better compatibility
     enableCors: true,
-    
+
     // Override with any user-provided options
-    ...middlewareOptions
+    ...middlewareOptions,
   };
 
   // Create and apply the auth middleware

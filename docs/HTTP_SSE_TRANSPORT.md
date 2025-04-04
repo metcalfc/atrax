@@ -67,7 +67,7 @@ npm run http-echo-server
 This server will:
 - Start an HTTP server on port 4001
 - Expose an SSE endpoint at `/sse`
-- Expose a message endpoint at `/message` 
+- Expose a message endpoint at `/message`
 - Provide an echo tool that returns any message sent to it
 
 2. Run the HTTP/SSE client example:
@@ -87,7 +87,7 @@ This client will:
 The Atrax proxy server integrates HTTP/SSE transport by:
 
 1. Exposing SSE endpoints for clients to connect to
-2. Managing client sessions 
+2. Managing client sessions
 3. Forwarding client requests to the appropriate MCP servers
 4. Aggregating responses from multiple servers when needed
 5. Handling error conditions with proper error responses
@@ -132,9 +132,9 @@ await client.connect(transport);
 
 // Use tools
 const tools = await client.listTools();
-const result = await client.callTool({ 
-  name: 'tool-name', 
-  arguments: { param: 'value' } 
+const result = await client.callTool({
+  name: 'tool-name',
+  arguments: { param: 'value' }
 });
 
 // Disconnect when done

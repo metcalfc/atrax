@@ -61,7 +61,7 @@ send_http_request() {
       -d "$json_data" \
       "$url")
   fi
-  
+
   # Pretty-print JSON if possible, otherwise show raw response
   echo "$result" | jq . 2>/dev/null || echo "$result"
   echo -e "\n"
@@ -81,7 +81,7 @@ send_proxy_request() {
 
   # Add sessionId to route to the correct server
   local full_url="${url}?sessionId=${server_name}"
-  
+
   # Make the request with or without authentication token
   if [ -n "$token" ]; then
     local result=$(curl -s -X POST \
@@ -95,7 +95,7 @@ send_proxy_request() {
       -d "$json_data" \
       "$full_url")
   fi
-  
+
   # Pretty-print JSON if possible, otherwise show raw response
   echo "$result" | jq . 2>/dev/null || echo "$result"
   echo -e "\n"
@@ -106,15 +106,15 @@ test_http_endpoint() {
   local url="$1"
   local name="$2"
   local token="$3"
-  
+
   echo -e "${YELLOW}Testing ${name}...${NC}"
-  
+
   if [ -n "$token" ]; then
     curl -s -H "Authorization: Bearer $token" "$url" | jq . 2>/dev/null || echo
   else
     curl -s "$url" | jq . 2>/dev/null || echo
   fi
-  
+
   echo -e "\n"
 }
 
@@ -125,24 +125,24 @@ start_server() {
   local health_endpoint="$3"
   local description="$4"
   local pid_file="$5"  # Optional pid file path
-  
+
   echo -e "${BLUE}Starting ${description} on port ${port}...${NC}"
-  
+
   # Start server in background
   eval "$command" &
   local pid=$!
-  
+
   # Save PID to file if specified
   if [ -n "$pid_file" ]; then
     echo $pid > "$pid_file"
     echo -e "${YELLOW}Saved PID $pid to $pid_file${NC}"
   fi
-  
+
   # Wait for server to start
   echo -e "${YELLOW}Waiting for server to start...${NC}"
   local max_attempts=10
   local attempt=1
-  
+
   while [ $attempt -le $max_attempts ]; do
     if curl -s "$health_endpoint" > /dev/null; then
       echo -e "${GREEN}Server started successfully (PID: $pid)${NC}\n"
@@ -150,12 +150,12 @@ start_server() {
       echo "$pid"
       return 0
     fi
-    
+
     echo -n "."
     sleep 1
     attempt=$((attempt + 1))
   done
-  
+
   echo -e "\n${RED}Failed to start server after $max_attempts attempts${NC}"
   return 1
 }
@@ -163,7 +163,7 @@ start_server() {
 # Cleanup function to kill server processes
 cleanup_servers() {
   echo -e "${BLUE}Cleaning up...${NC}"
-  
+
   # Kill all server processes passed as arguments
   for pid in "$@"; do
     if [ -n "$pid" ] && [[ "$pid" =~ ^[0-9]+$ ]]; then
@@ -172,14 +172,14 @@ cleanup_servers() {
       wait $pid 2>/dev/null || true
     fi
   done
-  
+
   # Also check for PID file
   if [ -n "$ATRAX_PID_FILE" ] && [ -f "$ATRAX_PID_FILE" ]; then
     echo -e "${YELLOW}Stopping Atrax server from pid file...${NC}"
     kill -9 $(cat "$ATRAX_PID_FILE") 2>/dev/null || true
     rm "$ATRAX_PID_FILE" 2>/dev/null
   fi
-  
+
   # Check if there are any processes using our port and kill them
   if [ -n "$PORT" ]; then
     PORT_PID=$(lsof -ti:$PORT 2>/dev/null)
@@ -188,7 +188,7 @@ cleanup_servers() {
       kill -9 $PORT_PID 2>/dev/null || true
     fi
   fi
-  
+
   echo -e "${GREEN}Servers stopped.${NC}"
 }
 
@@ -198,7 +198,7 @@ test_echo_server_tools() {
   local url_or_path="$2"
   local server_name="$3"
   local token="$4"
-  
+
   # Get capabilities to see available tools
   $test_function "$url_or_path" "$server_name" "Get Capabilities" '{
     "jsonrpc": "2.0",
@@ -265,10 +265,10 @@ test_memory_server_tools() {
   local url_or_path="$2"
   local server_name="$3"
   local token="$4"
-  
+
   # Get capabilities to see available tools
   $test_function "$url_or_path" "$server_name" "Get Capabilities" '{
-    "jsonrpc": "2.0", 
+    "jsonrpc": "2.0",
     "method": "initialize",
     "params": {
       "protocolVersion": "2024-11-05",
@@ -282,7 +282,7 @@ test_memory_server_tools() {
   # List available tools
   $test_function "$url_or_path" "$server_name" "List Available Tools" '{
     "jsonrpc": "2.0",
-    "method": "mcp.listTools", 
+    "method": "mcp.listTools",
     "id": "memory-list"
   }' "$token"
 

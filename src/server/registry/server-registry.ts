@@ -49,10 +49,10 @@ export class ServerRegistry extends EventEmitter {
   private transportFactory: TransportFactory;
   private pendingResponses: Map<
     string,
-    { 
-      resolve: (value: unknown) => void; 
-      reject: (reason: Error) => void; 
-      timeoutId: NodeJS.Timeout 
+    {
+      resolve: (value: unknown) => void;
+      reject: (reason: Error) => void;
+      timeoutId: NodeJS.Timeout;
     }
   > = new Map();
 
@@ -247,11 +247,11 @@ export class ServerRegistry extends EventEmitter {
    * @returns Response from server (unknown type)
    * @throws Error if server is not registered or not running
    */
-  async sendMessage(name: string, message: JSONRPCMessage, timeout?: number): Promise<unknown>
+  async sendMessage(name: string, message: JSONRPCMessage, timeout?: number): Promise<unknown>;
 
   /**
    * Send a typed method request to a server
-   * 
+   *
    * @param name - Server name
    * @param message - Message with a method that has a known result type
    * @param timeout - Timeout in milliseconds
@@ -259,15 +259,19 @@ export class ServerRegistry extends EventEmitter {
    * @throws Error if server is not registered or not running
    */
   async sendMessage<M extends keyof MethodResults>(
-    name: string, 
+    name: string,
     message: JSONRPCRequest & { method: M; params: MethodParams[M] },
     timeout?: number
-  ): Promise<MethodResults[M]>
-  
+  ): Promise<MethodResults[M]>;
+
   /**
    * Implementation of sendMessage that handles both typed and untyped requests
    */
-  async sendMessage(name: string, message: JSONRPCMessage, timeout: number = 5000): Promise<unknown> {
+  async sendMessage(
+    name: string,
+    message: JSONRPCMessage,
+    timeout: number = 5000
+  ): Promise<unknown> {
     const transport = this.transports.get(name);
     if (!transport) {
       throw new Error(`Server ${name} not running`);

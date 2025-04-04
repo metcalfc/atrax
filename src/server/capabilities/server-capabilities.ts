@@ -67,7 +67,7 @@ export class ServerCapabilities {
 
     try {
       // First try get_capabilities request
-      const result = await this.serverRegistry.sendMessage(
+      const result = (await this.serverRegistry.sendMessage(
         serverName,
         {
           jsonrpc: '2.0',
@@ -76,7 +76,7 @@ export class ServerCapabilities {
           params: {},
         },
         5000 // 5 second timeout
-      ) as { capabilities?: McpCapabilities };
+      )) as { capabilities?: McpCapabilities };
 
       if (result && result.capabilities) {
         // Process capabilities from server response

@@ -8,7 +8,7 @@ import {
   JSONRPCResponse,
   JSONRPCErrorObject,
   McpResource,
-  McpToolResult
+  McpToolResult,
 } from '../../src/types/mcp.js';
 
 // Skip this test for now as it requires actual server setup

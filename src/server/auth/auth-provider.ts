@@ -141,7 +141,7 @@ export class InMemoryAuthProvider implements AuthProvider {
 
 /**
  * Token authentication provider
- * 
+ *
  * Simple authentication provider that validates against a static token
  */
 export class TokenAuthProvider implements AuthProvider {
@@ -151,20 +151,16 @@ export class TokenAuthProvider implements AuthProvider {
 
   /**
    * Create a new token authentication provider
-   * 
+   *
    * @param token - Static token to validate against
    * @param userId - User ID to associate with this token
    * @param roles - Roles to assign to the user
    */
-  constructor(
-    token: string, 
-    userId: string = 'token-user', 
-    roles: string[] = ['user']
-  ) {
+  constructor(token: string, userId: string = 'token-user', roles: string[] = ['user']) {
     this.token = token;
     this.userId = userId;
     this.roles = roles;
-    
+
     if (!token) {
       console.warn('WARNING: Token is empty. Authentication will fail for all requests.');
     }
@@ -178,16 +174,16 @@ export class TokenAuthProvider implements AuthProvider {
    */
   async authenticate(credentials: { token: string }): Promise<AuthResult> {
     const { token } = credentials;
-    
+
     if (token === this.token) {
       return {
         success: true,
         userId: this.userId,
         roles: this.roles,
-        token: this.token
+        token: this.token,
       };
     }
-    
+
     return { success: false, error: 'Invalid token' };
   }
 
@@ -202,17 +198,17 @@ export class TokenAuthProvider implements AuthProvider {
       return {
         success: true,
         userId: this.userId,
-        roles: this.roles
+        roles: this.roles,
       };
     }
-    
+
     return { success: false, error: 'Invalid token' };
   }
 }
 
 /**
  * No authentication provider
- * 
+ *
  * Authentication provider that always succeeds
  */
 export class NoAuthProvider implements AuthProvider {
@@ -221,7 +217,7 @@ export class NoAuthProvider implements AuthProvider {
 
   /**
    * Create a new no authentication provider
-   * 
+   *
    * @param userId - User ID to associate with requests
    * @param roles - Roles to assign to the user
    */
@@ -234,10 +230,10 @@ export class NoAuthProvider implements AuthProvider {
    * Always succeeds
    */
   async authenticate(_: any): Promise<AuthResult> {
-    return { 
-      success: true, 
+    return {
+      success: true,
       userId: this.userId,
-      roles: this.roles
+      roles: this.roles,
     };
   }
 
@@ -245,10 +241,10 @@ export class NoAuthProvider implements AuthProvider {
    * Always succeeds
    */
   async validateToken(_: string): Promise<AuthResult> {
-    return { 
-      success: true, 
+    return {
+      success: true,
       userId: this.userId,
-      roles: this.roles
+      roles: this.roles,
     };
   }
 }
@@ -279,11 +275,7 @@ export function createAuthProvider(authType: string, options?: any): AuthProvide
       if (!options?.token) {
         throw new Error('Token is required for token authentication');
       }
-      return new TokenAuthProvider(
-        options.token, 
-        'token-user', 
-        ['user']
-      );
+      return new TokenAuthProvider(options.token, 'token-user', ['user']);
 
     default:
       throw new Error(`Unsupported authentication type: ${authType}`);

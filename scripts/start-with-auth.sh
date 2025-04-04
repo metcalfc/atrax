@@ -55,12 +55,12 @@ for i in {1..10}; do
     echo -e "${GREEN}HTTP server is running on port ${HTTP_PORT}${NC}"
     break
   fi
-  
+
   if [ $i -eq 10 ]; then
     echo -e "${RED}HTTP server failed to start after 10 attempts${NC}"
     exit 1
   fi
-  
+
   echo -e "${YELLOW}Waiting for HTTP server (attempt ${i}/10)...${NC}"
   sleep 1
 done
@@ -76,7 +76,7 @@ echo -e "${YELLOW}3. Add Authorization header: Bearer ${MCP_TOKEN}${NC}"
 echo -e "${YELLOW}Alternatively, use: http://localhost:${PORT}/sse?token=${MCP_TOKEN}${NC}"
 echo -e "${BLUE}=============================${NC}"
 
-# Start the server with environment variables 
+# Start the server with environment variables
 node "${ATRAX_ROOT}/dist/src/cli.js" serve -f "${ATRAX_ROOT}/examples/token-config.json"
 
 # Keep running until Ctrl+C

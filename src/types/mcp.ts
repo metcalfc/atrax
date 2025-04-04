@@ -7,7 +7,7 @@ import {
   JSONRPCMessage,
   JSONRPCRequest,
   JSONRPCResponse,
-  JSONRPCNotification
+  JSONRPCNotification,
 } from '@modelcontextprotocol/sdk/types.js';
 
 /**
@@ -101,8 +101,8 @@ export type ToolCallParams = { name: string; arguments: Record<string, unknown> 
 export type PromptListParams = Record<string, never>;
 export type PromptGetParams = { name: string; arguments: Record<string, unknown> };
 export type GetCapabilitiesParams = Record<string, never>;
-export type InitializeParams = { 
-  protocolVersion?: string; 
+export type InitializeParams = {
+  protocolVersion?: string;
   capabilities?: Record<string, unknown>;
   clientInfo?: { name: string; version: string };
 };
@@ -117,24 +117,30 @@ export type MethodParams = {
   'tools/call': ToolCallParams;
   'prompts/list': PromptListParams;
   'prompts/get': PromptGetParams;
-  'get_capabilities': GetCapabilitiesParams;
-  'initialize': InitializeParams;
+  get_capabilities: GetCapabilitiesParams;
+  initialize: InitializeParams;
 };
 
 /**
  * Map of method names to their result types
  */
 export interface MethodResults {
-  'get_capabilities': { capabilities: McpCapabilities };
-  'resources/list': { resources: Array<{ uri: string; type?: string; metadata?: Record<string, unknown> }> };
+  get_capabilities: { capabilities: McpCapabilities };
+  'resources/list': {
+    resources: Array<{ uri: string; type?: string; metadata?: Record<string, unknown> }>;
+  };
   'resources/read': { contents: McpResource[] };
-  'tools/list': { tools: Array<{ name: string; description?: string; metadata?: Record<string, unknown> }> };
+  'tools/list': {
+    tools: Array<{ name: string; description?: string; metadata?: Record<string, unknown> }>;
+  };
   'tools/call': McpToolResult;
-  'prompts/list': { prompts: Array<{ name: string; description?: string; metadata?: Record<string, unknown> }> };
+  'prompts/list': {
+    prompts: Array<{ name: string; description?: string; metadata?: Record<string, unknown> }>;
+  };
   'prompts/get': { messages: Array<Record<string, unknown>>; description?: string };
-  'initialize': { 
-    protocolVersion: string; 
-    serverInfo: { name: string; version: string }; 
+  initialize: {
+    protocolVersion: string;
+    serverInfo: { name: string; version: string };
     capabilities: McpCapabilities;
   };
 }
@@ -143,9 +149,4 @@ export interface MethodResults {
  * Re-export SDK types for convenience
  * Using 'export type' since isolatedModules is enabled
  */
-export type {
-  JSONRPCMessage,
-  JSONRPCRequest,
-  JSONRPCResponse,
-  JSONRPCNotification
-};
+export type { JSONRPCMessage, JSONRPCRequest, JSONRPCResponse, JSONRPCNotification };

@@ -12,7 +12,7 @@ This document explains the changes made to ensure compatibility between Atrax's 
    ```javascript
    // Changed from:
    res.write(`event: endpoint\ndata: /message\n\n`);
-   
+
    // To:
    res.write(`event: endpoint\ndata: /message?sessionId=${clientId}\n\n`);
    ```
@@ -36,7 +36,7 @@ This document explains the changes made to ensure compatibility between Atrax's 
 
 2. **SSE Connection Handling**: Modified the `handleSSE` method to:
    - Use the SDK's transport directly
-   - Send the endpoint event with session ID 
+   - Send the endpoint event with session ID
    - Send headers in the correct order
 
 3. **Message Routing**: Updated the `handleMessage` method to properly extract the session ID from query parameters and route requests to the correct transport.
@@ -47,12 +47,12 @@ This document explains the changes made to ensure compatibility between Atrax's 
    ```typescript
    class TransportAdapter implements Transport {
      private transport: SdkSSEServerTransport;
-     
+
      constructor(transport: SdkSSEServerTransport, clientId: string) {
        this.transport = transport;
        // ...setup event forwarding...
      }
-     
+
      // Implement Transport interface methods by delegating to SDK transport
    }
    ```

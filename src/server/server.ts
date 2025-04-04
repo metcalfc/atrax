@@ -102,7 +102,7 @@ export class AtraxServer {
     this.authProvider = setupAuth(this.app, this.config.auth, {
       enableCors: true,
       // Only bypass basic endpoints, SSE and message require authentication
-      bypassPaths: ['/health', '/status', '/auth']
+      bypassPaths: ['/health', '/status', '/auth'],
     });
   }
 
@@ -124,7 +124,7 @@ export class AtraxServer {
     this.app.get('/health', (req, res) => {
       res.json({ status: 'ok' });
     });
-    
+
     // Add debug endpoints only in development mode
     if (process.env.NODE_ENV === 'development') {
       // Debug endpoints for development
@@ -195,12 +195,10 @@ export class AtraxServer {
     this.app.post('/message', wrapHandler(messageHandler));
 
     // Error handling
-    this.app.use(
-      (err: Error, req: Request, res: Response, next: NextFunction) => {
-        logger.error('Express error:', err);
-        res.status(500).json({ error: 'Internal server error' });
-      }
-    );
+    this.app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+      logger.error('Express error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    });
   }
 
   /**

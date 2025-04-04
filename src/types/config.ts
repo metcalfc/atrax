@@ -149,15 +149,21 @@ export type AuthConfig =
 /**
  * Type guards for authentication types
  */
-export const isBasicAuth = (auth: AuthConfig): auth is { type: 'basic'; options: BasicAuthOptions } => {
+export const isBasicAuth = (
+  auth: AuthConfig
+): auth is { type: 'basic'; options: BasicAuthOptions } => {
   return auth.type === 'basic';
 };
 
-export const isTokenAuth = (auth: AuthConfig): auth is { type: 'token'; options: TokenAuthOptions } => {
+export const isTokenAuth = (
+  auth: AuthConfig
+): auth is { type: 'token'; options: TokenAuthOptions } => {
   return auth.type === 'token';
 };
 
-export const isOAuth2Auth = (auth: AuthConfig): auth is { type: 'oauth2'; options: OAuth2AuthOptions } => {
+export const isOAuth2Auth = (
+  auth: AuthConfig
+): auth is { type: 'oauth2'; options: OAuth2AuthOptions } => {
   return auth.type === 'oauth2';
 };
 

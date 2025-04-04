@@ -5,7 +5,7 @@ This document explains how session management works for Server-Sent Events (SSE)
 ## Session Flow
 
 1. **Client Connects**: When a client connects to the `/sse` endpoint, the server:
-   - Creates a unique session ID 
+   - Creates a unique session ID
    - Sends an "endpoint" event with the message endpoint URL including the session ID
    - Stores the session information in a session map
 

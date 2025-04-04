@@ -18,8 +18,8 @@ export class SSETransportError extends Error {
   ) {
     super(message);
     this.name = 'SSETransportError';
-    
-    // Capture the stack trace 
+
+    // Capture the stack trace
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, SSETransportError);
     }
@@ -37,7 +37,7 @@ export class SSEServerTransport implements Transport {
   private closeHandlers: (() => void)[] = [];
   private running: boolean = false;
   private clientId: string;
-  
+
   /**
    * Get the underlying SDK transport's session ID
    */
@@ -47,7 +47,7 @@ export class SSEServerTransport implements Transport {
 
   /**
    * Create a new SSE server transport
-   * 
+   *
    * @param path - The path for the message endpoint
    * @param res - The Express response object to use for SSE
    * @param clientId - Optional client identifier for tracing
@@ -55,7 +55,7 @@ export class SSEServerTransport implements Transport {
   constructor(path: string, res: Response, clientId?: string) {
     this.clientId = clientId || 'unknown-client';
     logger.debug(`Creating SSE transport for client ${this.clientId}`);
-    
+
     try {
       this.transport = new SdkSSEServerTransport(path, res);
     } catch (error) {
@@ -87,12 +87,9 @@ export class SSEServerTransport implements Transport {
     };
 
     this.transport.onerror = error => {
-      const transportError = new SSETransportError(
-        'SSE transport error',
-        error,
-        500,
-        { clientId: this.clientId }
-      );
+      const transportError = new SSETransportError('SSE transport error', error, 500, {
+        clientId: this.clientId,
+      });
       logger.error(`Transport error for client ${this.clientId}:`, transportError);
       this.errorHandlers.forEach(handler => handler(transportError));
     };
@@ -112,7 +109,7 @@ export class SSEServerTransport implements Transport {
       logger.debug(`Transport for client ${this.clientId} already running`);
       return;
     }
-    
+
     logger.info(`Starting SSE transport for client ${this.clientId}`);
     try {
       await this.transport.start();
@@ -138,7 +135,7 @@ export class SSEServerTransport implements Transport {
       logger.debug(`Transport for client ${this.clientId} not running`);
       return;
     }
-    
+
     logger.info(`Stopping SSE transport for client ${this.clientId}`);
     try {
       await this.transport.close();
@@ -158,25 +155,22 @@ export class SSEServerTransport implements Transport {
 
   /**
    * Send a message through the transport
-   * 
+   *
    * @param message - JSON-RPC message to send
    */
   async send(message: JSONRPCMessage): Promise<void> {
     if (!this.running) {
-      throw new SSETransportError(
-        'Transport not running',
-        undefined,
-        400,
-        { clientId: this.clientId }
-      );
+      throw new SSETransportError('Transport not running', undefined, 400, {
+        clientId: this.clientId,
+      });
     }
-    
+
     logger.debug(`Sending message to client ${this.clientId}`);
-    
+
     try {
       // Validate message before sending
       JSONRPCMessageSchema.parse(message);
-      
+
       await this.transport.send(message);
       logger.debug(`Successfully sent message to client ${this.clientId}`);
     } catch (error) {
@@ -193,7 +187,7 @@ export class SSEServerTransport implements Transport {
 
   /**
    * Check if the transport is running
-   * 
+   *
    * @returns True if the transport is running
    */
   isRunning(): boolean {
@@ -208,7 +202,7 @@ export class SSEServerTransport implements Transport {
   on(type: 'close', handler: (code?: number) => void): void;
   on(type: string, handler: (...args: any[]) => void): void {
     logger.debug(`Registering ${type} handler for client ${this.clientId}`);
-    
+
     switch (type) {
       case 'message':
         this.messageHandlers.push(handler as (message: JSONRPCMessage) => void);
@@ -232,7 +226,7 @@ export class SSEServerTransport implements Transport {
   removeListener(type: 'close', handler: (code?: number) => void): void;
   removeListener(type: string, handler: (...args: any[]) => void): void {
     logger.debug(`Removing ${type} handler for client ${this.clientId}`);
-    
+
     switch (type) {
       case 'message':
         this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
@@ -258,13 +252,13 @@ export class SSEServerTransport implements Transport {
 
   /**
    * Handle an HTTP POST message
-   * 
+   *
    * @param req - Express Request object
    * @param res - Express Response object
    */
   async handlePostMessage(req: Request, res: Response): Promise<void> {
     logger.debug(`Handling POST message for client ${this.clientId}`);
-    
+
     try {
       // Validate the request body is a valid JSON-RPC message
       try {
@@ -276,13 +270,13 @@ export class SSEServerTransport implements Transport {
           error: {
             code: -32600,
             message: 'Invalid JSON-RPC message',
-            data: { details: error instanceof Error ? error.message : 'Unknown error' }
+            data: { details: error instanceof Error ? error.message : 'Unknown error' },
           },
-          id: req.body?.id || null
+          id: req.body?.id || null,
         });
         return;
       }
-      
+
       await this.transport.handlePostMessage(req, res);
       logger.debug(`Successfully handled POST message for client ${this.clientId}`);
     } catch (error) {
@@ -293,7 +287,7 @@ export class SSEServerTransport implements Transport {
         { clientId: this.clientId }
       );
       logger.error(`POST message handling error:`, postError);
-      
+
       // If response is not already sent
       if (!res.headersSent) {
         res.status(500).json({
@@ -301,9 +295,9 @@ export class SSEServerTransport implements Transport {
           error: {
             code: -32603,
             message: 'Internal server error',
-            data: { details: error instanceof Error ? error.message : 'Unknown error' }
+            data: { details: error instanceof Error ? error.message : 'Unknown error' },
           },
-          id: req.body?.id || null
+          id: req.body?.id || null,
         });
       }
     }

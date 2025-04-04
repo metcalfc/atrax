@@ -8,8 +8,8 @@
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { 
-  CallToolRequestSchema, 
+import {
+  CallToolRequestSchema,
   ListToolsRequestSchema,
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
@@ -121,7 +121,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async request => {
       ]
     };
   }
-  
+
   return {
     error: {
       code: -32601, // MethodNotFound error code per MCP protocol
@@ -159,7 +159,7 @@ server.setRequestHandler(GetPromptRequestSchema, async request => {
       }
     };
   }
-  
+
   // Handle specific prompt names
   if (request.params.name === 'echo-greeting') {
     // Return format follows the MCP protocol for prompts/get
@@ -176,7 +176,7 @@ server.setRequestHandler(GetPromptRequestSchema, async request => {
       ]
     };
   }
-  
+
   // Return properly formatted error for invalid prompt names
   return {
     error: {

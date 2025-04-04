@@ -44,8 +44,14 @@ export class PathUtils {
         }
 
         // Handle relative paths (with or without ./ prefix)
-        if (!arg.startsWith('/') && 
-            (arg.includes('.js') || arg.includes('.ts') || arg.includes('bin/') || arg.startsWith('./') || arg.startsWith('../'))) {
+        if (
+          !arg.startsWith('/') &&
+          (arg.includes('.js') ||
+            arg.includes('.ts') ||
+            arg.includes('bin/') ||
+            arg.startsWith('./') ||
+            arg.startsWith('../'))
+        ) {
           const absolutePath = `${workingDir}/${arg}`;
           if (debug) {
             logger.debug(`Converted relative path ${arg} to absolute: ${absolutePath}`);

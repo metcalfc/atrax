@@ -101,12 +101,12 @@ export class ResourceDiscoveryManager {
 
     try {
       // Request resources from the server
-      const result = await this.serverRegistry.sendMessage(serverName, {
+      const result = (await this.serverRegistry.sendMessage(serverName, {
         jsonrpc: '2.0',
         id: crypto.randomUUID(),
         method: 'list_resources',
         params: {},
-      }) as { resources?: ResourceResponse[] };
+      })) as { resources?: ResourceResponse[] };
 
       // Define resource interface
       interface ResourceResponse {
@@ -147,12 +147,12 @@ export class ResourceDiscoveryManager {
 
     try {
       // Request tools from the server
-      const result = await this.serverRegistry.sendMessage(serverName, {
+      const result = (await this.serverRegistry.sendMessage(serverName, {
         jsonrpc: '2.0',
         id: crypto.randomUUID(),
         method: 'list_tools',
         params: {},
-      }) as { tools?: ToolResponse[] };
+      })) as { tools?: ToolResponse[] };
 
       // Define tool interface
       interface ToolResponse {
@@ -191,12 +191,12 @@ export class ResourceDiscoveryManager {
 
     try {
       // Request prompts from the server
-      const result = await this.serverRegistry.sendMessage(serverName, {
+      const result = (await this.serverRegistry.sendMessage(serverName, {
         jsonrpc: '2.0',
         id: crypto.randomUUID(),
         method: 'list_prompts',
         params: {},
-      }) as { prompts?: PromptResponse[] };
+      })) as { prompts?: PromptResponse[] };
 
       // Define prompt interface
       interface PromptResponse {

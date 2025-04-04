@@ -25,7 +25,7 @@ check_server_status() {
     echo -e "${GREEN}  cd $ATRAX_ROOT && npm run build && npm run build:test${NC}"
     exit 1
   fi
-  
+
   echo -e "${GREEN}Atrax server detected on port $PORT${NC}"
 }
 

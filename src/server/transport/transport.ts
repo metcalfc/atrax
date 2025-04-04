@@ -44,7 +44,7 @@ export interface Transport {
 
   /**
    * Add an event listener
-   * 
+   *
    * @param type - Event type
    * @param handler - Event handler
    */
@@ -55,7 +55,7 @@ export interface Transport {
 
   /**
    * Remove an event listener
-   * 
+   *
    * @param type - Event type
    * @param handler - Event handler
    */

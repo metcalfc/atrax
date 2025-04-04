@@ -100,17 +100,17 @@ app.get('/sse', async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Content-Type', 'text/event-stream');
-    
+
     // Create and start SSE transport
     transport = new SSEServerTransport('/message', res);
     await server.connect(transport);
-    
+
     // Get the session ID from the transport
     const sessionId = transport.sessionId;
-    
+
     // Send the message endpoint with session ID for proper association
     res.write(`event: endpoint\ndata: /message?sessionId=${sessionId}\n\n`);
-    
+
     console.log(`SSE connection established with session ID ${sessionId}`);
   } catch (error) {
     console.error('Error establishing SSE connection:', error);
@@ -123,7 +123,7 @@ app.post('/message', express.json(), async (req, res) => {
   try {
     const sessionId = req.query.sessionId as string;
     console.log(`Received message for session ${sessionId}:`, req.body);
-    
+
     // Validation for session ID
     if (!sessionId) {
       console.error('Missing sessionId parameter');
@@ -138,7 +138,7 @@ app.post('/message', express.json(), async (req, res) => {
       });
       return;
     }
-    
+
     // Direct handling of the Express request/response
     await transport.handlePostMessage(req, res);
     console.log(`Handled HTTP request for session ${sessionId}`);

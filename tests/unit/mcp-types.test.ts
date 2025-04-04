@@ -96,7 +96,7 @@ describe('MCP Type Definitions', () => {
         };
         return invalidParams;
       };
-      
+
       // Just assert that the function exists
       expect(typeof validationTest).toBe('function');
     });
@@ -125,9 +125,7 @@ describe('MCP Type Definitions', () => {
       expect(resourcesList.resources.length).toBe(2);
 
       const toolsCall: MethodResults['tools/call'] = {
-        content: [
-          { type: 'text', text: 'Result text' },
-        ],
+        content: [{ type: 'text', text: 'Result text' }],
         isError: false,
       };
       expect(toolsCall.content[0].text).toBe('Result text');
@@ -215,16 +213,18 @@ describe('MCP Type Definitions', () => {
         jsonrpc: '2.0',
         id: '123',
         result: {
-          resources: [
-            { uri: 'test://resource' },
-          ],
+          resources: [{ uri: 'test://resource' }],
         },
       };
 
       // Type assertion test
       expect(response.jsonrpc).toBe('2.0');
       expect(response.id).toBe('123');
-      if (response.result && typeof response.result === 'object' && 'resources' in response.result) {
+      if (
+        response.result &&
+        typeof response.result === 'object' &&
+        'resources' in response.result
+      ) {
         expect(Array.isArray(response.result.resources)).toBe(true);
       }
     });

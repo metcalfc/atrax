@@ -12,13 +12,13 @@
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { 
-  CallToolRequestSchema, 
+import {
+  CallToolRequestSchema,
   ListToolsRequestSchema,
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
   ListPromptsRequestSchema,
-  GetPromptRequestSchema 
+  GetPromptRequestSchema
 } from '@modelcontextprotocol/sdk/types.js';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -648,13 +648,13 @@ server.setRequestHandler(ReadResourceRequestSchema, async request => {
     try {
       // Get the current state of the knowledge graph
       const graph = await knowledgeGraphManager.readGraph();
-      
+
       // Ensure we return a valid graph structure even if empty
       const safeGraph = {
         entities: graph.entities || [],
         relations: graph.relations || []
       };
-      
+
       // Return contents according to the MCP schema (note: contents is an array)
       return {
         contents: [
@@ -679,7 +679,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async request => {
       };
     }
   }
-  
+
   return {
     error: {
       code: 404,
@@ -713,7 +713,7 @@ server.setRequestHandler(GetPromptRequestSchema, async request => {
       }
     };
   }
-  
+
   // Handle specific prompt names
   if (request.params.name === 'memory-tutorial') {
     // Return format follows the MCP protocol for prompts/get
@@ -752,7 +752,7 @@ Try using these tools to build and query a knowledge graph!`
       ]
     };
   }
-  
+
   // Return properly formatted error for invalid prompt names
   return {
     error: {
@@ -765,7 +765,7 @@ Try using these tools to build and query a knowledge graph!`
 async function main() {
   // Only log to stderr, not stdout which is reserved for JSON-RPC messages
   console.error('Knowledge Graph MCP Server starting up...');
-  
+
   try {
     const transport = new StdioServerTransport();
     await server.connect(transport);

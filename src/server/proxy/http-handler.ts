@@ -17,11 +17,14 @@ export class HttpHandler {
   private proxy: McpProxy;
   private registry: ServerRegistry;
   // Store sessions with all related information
-  private sessions: Map<string, {
-    transport: SdkSSEServerTransport;
-    adapter: TransportAdapter;
-    createdAt: Date;
-  }> = new Map();
+  private sessions: Map<
+    string,
+    {
+      transport: SdkSSEServerTransport;
+      adapter: TransportAdapter;
+      createdAt: Date;
+    }
+  > = new Map();
 
   /**
    * Create a new HTTP handler
@@ -52,21 +55,21 @@ export class HttpHandler {
 
       // Create SDK's SSEServerTransport directly
       const transport = new SdkSSEServerTransport('/message', res);
-      
+
       // Get the SDK-generated session ID
       const sessionId = transport.sessionId;
       logger.debug(`SDK assigned session ID: ${sessionId} for client ${clientId}`);
-      
+
       // Create an adapter to make it compatible with our Transport interface
       const adapter = new TransportAdapter(transport, clientId);
-      
+
       // Store session information with both original transport and adapter
       this.sessions.set(sessionId, {
         transport,
         adapter,
-        createdAt: new Date()
+        createdAt: new Date(),
       });
-      
+
       // Add client to proxy with the client ID using the adapter
       this.proxy.addClientTransport(clientId, adapter);
 
@@ -81,7 +84,7 @@ export class HttpHandler {
         logger.error(`Failed to start SSE transport for client ${clientId}:`, error);
         throw error;
       }
-      
+
       // Handle connection close
       req.on('close', () => {
         logger.info(`SSE connection closed for client ${clientId} (session ${sessionId})`);
@@ -92,10 +95,10 @@ export class HttpHandler {
       this.handleSseError(req, res, error);
     }
   }
-  
+
   /**
    * Handle errors during SSE connection
-   * 
+   *
    * @param req - HTTP request
    * @param res - HTTP response
    * @param error - The error that occurred
@@ -104,9 +107,9 @@ export class HttpHandler {
     logger.error('Error in SSE handler:', error);
     // Only send an error response if headers haven't been sent yet
     if (!res.headersSent) {
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       });
     } else {
       // If headers have been sent, we need to end the response
@@ -138,9 +141,9 @@ export class HttpHandler {
             error: {
               code: -32600,
               message: 'Invalid request body',
-              data: { details: 'Request body must be a valid JSON object' }
+              data: { details: 'Request body must be a valid JSON object' },
             },
-            id: null
+            id: null,
           });
         }
 
@@ -151,9 +154,9 @@ export class HttpHandler {
             error: {
               code: -32600,
               message: 'Invalid JSON-RPC message',
-              data: { details: 'Message must have jsonrpc field set to "2.0"' }
+              data: { details: 'Message must have jsonrpc field set to "2.0"' },
             },
-            id: req.body.id || null
+            id: req.body.id || null,
           });
         }
 
@@ -168,15 +171,15 @@ export class HttpHandler {
       if (!session) {
         logger.error(`No session found with ID: ${sessionId}`);
         logger.debug(`Available sessions: ${Array.from(this.sessions.keys()).join(', ')}`);
-        
+
         return res.status(404).json({
           jsonrpc: '2.0',
           error: {
             code: -32000,
             message: 'Session not found',
-            data: { details: `No active session found with ID: ${sessionId}` }
+            data: { details: `No active session found with ID: ${sessionId}` },
           },
-          id: null
+          id: null,
         });
       }
 
@@ -186,14 +189,17 @@ export class HttpHandler {
         // This is critical: we must NOT access req.body before passing to transport
         // The SDK will parse the body directly from the request stream
         logger.debug(`Delegating message handling to SDK transport for session ${sessionId}`);
-        
+
         // Pass the request and response directly to the SDK transport without trying to
         // pre-process or access the body at all
         await session.transport.handlePostMessage(req, res);
         logger.debug(`Successfully handled message for session ${sessionId}`);
       } catch (transportError) {
-        logger.error(`Error in transport.handlePostMessage for session ${sessionId}:`, transportError);
-        
+        logger.error(
+          `Error in transport.handlePostMessage for session ${sessionId}:`,
+          transportError
+        );
+
         // Only send response if headers haven't been sent yet
         if (!res.headersSent) {
           res.status(500).json({
@@ -201,16 +207,18 @@ export class HttpHandler {
             error: {
               code: -32603,
               message: 'Internal server error',
-              data: { details: transportError instanceof Error ? transportError.message : 'Unknown error' }
+              data: {
+                details: transportError instanceof Error ? transportError.message : 'Unknown error',
+              },
             },
-            id: null
+            id: null,
           });
         }
         return;
       }
     } catch (error) {
       logger.error('Error in message handler:', error);
-      
+
       // Only send response if headers haven't been sent yet
       if (!res.headersSent) {
         res.status(500).json({
@@ -218,9 +226,9 @@ export class HttpHandler {
           error: {
             code: -32603,
             message: 'Internal server error',
-            data: { details: error instanceof Error ? error.message : 'Unknown error' }
+            data: { details: error instanceof Error ? error.message : 'Unknown error' },
           },
-          id: req.body?.id || null
+          id: req.body?.id || null,
         });
       }
     }
@@ -245,9 +253,9 @@ export class HttpHandler {
       res.json({ servers });
     } catch (error) {
       logger.error('Error in getServers:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -285,9 +293,9 @@ export class HttpHandler {
       }
     } catch (error) {
       logger.error('Error in getServerDetails:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -318,9 +326,9 @@ export class HttpHandler {
       }
     } catch (error) {
       logger.error('Error in startServer:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -351,9 +359,9 @@ export class HttpHandler {
       }
     } catch (error) {
       logger.error('Error in stopServer:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -379,9 +387,9 @@ export class HttpHandler {
       res.json(status);
     } catch (error) {
       logger.error('Error in getStatus:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }

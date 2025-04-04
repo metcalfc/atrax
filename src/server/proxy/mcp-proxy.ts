@@ -10,7 +10,7 @@ import {
   JSONRPCErrorObject,
   McpCapabilities,
   JSONRPCErrorData,
-  MethodParams
+  MethodParams,
 } from '../../types/mcp.js';
 import {
   createErrorResponse,
@@ -22,7 +22,7 @@ import {
   promptNotFoundError,
   methodNotFoundError,
   serverUnavailableError,
-  toMcpError
+  toMcpError,
 } from '../../utils/errors.js';
 import crypto from 'node:crypto';
 
@@ -37,12 +37,11 @@ interface ListResponse {
   [key: string]: unknown[];
 }
 
-
 const logger = createContextLogger('McpProxy');
 
 /**
  * Gets the list of all running servers
- * 
+ *
  * @param registry - Server registry
  * @returns Array of server IDs for running servers
  */
@@ -54,7 +53,7 @@ function getRunningServers(registry: ServerRegistry): string[] {
 
 /**
  * Utility function to create a JSON-RPC request to a server
- * 
+ *
  * @param method - Method name
  * @param params - Method parameters
  * @returns JSON-RPC request object
@@ -64,13 +63,13 @@ function createServerRequest(method: string, params: Record<string, unknown> = {
     jsonrpc: '2.0',
     id: crypto.randomUUID(),
     method,
-    params
+    params,
   };
 }
 
 /**
  * Aggregates items (resources, tools, prompts) from all servers
- * 
+ *
  * @param registry - Server registry
  * @param method - Method to call on servers (e.g., "tools/list")
  * @param collectionKey - Key in the response that contains the items (e.g., "tools")
@@ -85,28 +84,30 @@ async function aggregateCollection(
 ): Promise<CollectionItem[]> {
   const allItems: CollectionItem[] = [];
   const runningServers = getRunningServers(registry);
-  
+
   logger.info(`Requesting ${collectionKey} from servers: ${runningServers.join(', ')}`);
-  
+
   // Request items from each server
   for (const serverId of runningServers) {
     try {
       const request = createServerRequest(method, params);
       const serverResponse = await registry.sendMessage(serverId, request);
-      
+
       // Extract items from response with safe type checking
-      if (serverResponse && 
-          typeof serverResponse === 'object' && 
-          collectionKey in serverResponse && 
-          Array.isArray(serverResponse[collectionKey])) {
-        
+      if (
+        serverResponse &&
+        typeof serverResponse === 'object' &&
+        collectionKey in serverResponse &&
+        Array.isArray(serverResponse[collectionKey])
+      ) {
         // Add server identifier to each item for routing
-        const serverItems = (serverResponse[collectionKey] as Array<Record<string, unknown>>)
-          .map(item => ({
+        const serverItems = (serverResponse[collectionKey] as Array<Record<string, unknown>>).map(
+          item => ({
             ...item,
             _serverName: serverId, // Use underscore to hide from clients
-          }));
-        
+          })
+        );
+
         allItems.push(...serverItems);
         logger.info(`Found ${serverItems.length} ${collectionKey} from server ${serverId}`);
       }
@@ -115,48 +116,44 @@ async function aggregateCollection(
       logger.warn(`Error getting ${collectionKey} from server ${serverId}:`, error);
     }
   }
-  
+
   return allItems;
 }
 
 /**
  * Finds a server that has a specific tool by name
- * 
+ *
  * @param registry - Server registry
  * @param toolName - Tool name to find
  * @returns Server ID or throws McpError if no server supports the tool
  */
-async function findServerForTool(
-  registry: ServerRegistry,
-  toolName: string
-): Promise<string> {
+async function findServerForTool(registry: ServerRegistry, toolName: string): Promise<string> {
   const runningServers = getRunningServers(registry);
-  
+
   if (runningServers.length === 0) {
-    throw new McpError(
-      ErrorCode.SERVER_UNAVAILABLE, 
-      'No running servers available',
-      { details: 'No servers are running to handle tool requests' }
-    );
+    throw new McpError(ErrorCode.SERVER_UNAVAILABLE, 'No running servers available', {
+      details: 'No servers are running to handle tool requests',
+    });
   }
-  
+
   // Iterate through servers to find one with this tool
   for (const serverId of runningServers) {
     try {
       // Get tools from this server
       const request = createServerRequest('tools/list', {});
       const toolsResponse = await registry.sendMessage(serverId, request);
-      
+
       // Check if this server has the requested tool
-      if (toolsResponse &&
-          typeof toolsResponse === 'object' &&
-          'tools' in toolsResponse &&
-          Array.isArray(toolsResponse.tools)) {
-        
+      if (
+        toolsResponse &&
+        typeof toolsResponse === 'object' &&
+        'tools' in toolsResponse &&
+        Array.isArray(toolsResponse.tools)
+      ) {
         const hasTool = (toolsResponse.tools as Array<Record<string, unknown>>).some(
-          (tool) => tool.name === toolName
+          tool => tool.name === toolName
         );
-        
+
         if (hasTool) {
           return serverId;
         }
@@ -168,53 +165,48 @@ async function findServerForTool(
       logger.warn(`Error checking tools for server ${serverId}`);
     }
   }
-  
+
   // If we get here, no server was found for this tool
   throw toolNotFoundError(toolName);
 }
 
 /**
  * Finds a server that has a specific prompt by name
- * 
+ *
  * @param registry - Server registry
  * @param promptName - Prompt name to find
  * @returns Server ID or throws McpError if no server supports the prompt
  */
-async function findServerForPrompt(
-  registry: ServerRegistry,
-  promptName: string
-): Promise<string> {
+async function findServerForPrompt(registry: ServerRegistry, promptName: string): Promise<string> {
   const runningServers = getRunningServers(registry);
-  
+
   if (runningServers.length === 0) {
-    throw new McpError(
-      ErrorCode.SERVER_UNAVAILABLE,
-      'No running servers available',
-      { details: 'No servers are running to handle prompt requests' }
-    );
+    throw new McpError(ErrorCode.SERVER_UNAVAILABLE, 'No running servers available', {
+      details: 'No servers are running to handle prompt requests',
+    });
   }
-  
+
   // Try to find the server with this prompt
   for (const serverId of runningServers) {
     try {
       // Get prompts from this server
       const request = createServerRequest('prompts/list', {});
       const promptsResponse = await registry.sendMessage(serverId, request);
-      
+
       // Check if this server has the requested prompt
-      if (promptsResponse && 
-          typeof promptsResponse === 'object' && 
-          'prompts' in promptsResponse && 
-          Array.isArray(promptsResponse.prompts)) {
-        
+      if (
+        promptsResponse &&
+        typeof promptsResponse === 'object' &&
+        'prompts' in promptsResponse &&
+        Array.isArray(promptsResponse.prompts)
+      ) {
         const hasPrompt = (promptsResponse.prompts as Array<Record<string, unknown>>).some(
-          (prompt) => {
+          prompt => {
             // Match by name, id or both
-            return (prompt.name === promptName) || 
-                   (prompt.id === promptName);
+            return prompt.name === promptName || prompt.id === promptName;
           }
         );
-        
+
         if (hasPrompt) {
           return serverId;
         }
@@ -226,7 +218,7 @@ async function findServerForPrompt(
       logger.warn(`Error checking if server ${serverId} has prompt ${promptName}`);
     }
   }
-  
+
   // If we get here, no server was found for this prompt
   throw promptNotFoundError(promptName);
 }
@@ -262,8 +254,8 @@ export class McpProxy extends EventEmitter {
     'tools/call': 'tools/call',
     'prompts/list': 'prompts/list',
     'prompts/get': 'prompts/get',
-    'get_capabilities': 'get_capabilities',
-    'initialize': 'initialize'
+    get_capabilities: 'get_capabilities',
+    initialize: 'initialize',
   };
 
   /**
@@ -295,11 +287,9 @@ export class McpProxy extends EventEmitter {
    */
   addClientTransport(clientId: string, transport: Transport): void {
     if (this.clientTransports.has(clientId)) {
-      throw new McpError(
-        ErrorCode.INVALID_REQUEST,
-        `Client ${clientId} already connected`,
-        { details: 'Client ID already exists in the transport registry' }
-      );
+      throw new McpError(ErrorCode.INVALID_REQUEST, `Client ${clientId} already connected`, {
+        details: 'Client ID already exists in the transport registry',
+      });
     }
 
     logger.info(`Adding client transport for ${clientId}`);
@@ -369,9 +359,9 @@ export class McpProxy extends EventEmitter {
           code: -32600,
           message: 'Invalid request',
           data: {
-            details: 'Message does not have valid jsonrpc field set to "2.0"'
-          } as JSONRPCErrorData
-        }
+            details: 'Message does not have valid jsonrpc field set to "2.0"',
+          } as JSONRPCErrorData,
+        },
       };
     }
 
@@ -385,53 +375,53 @@ export class McpProxy extends EventEmitter {
             code: -32600,
             message: 'Method is required',
             data: {
-              details: 'Message missing required method field'
-            } as JSONRPCErrorData
-          }
+              details: 'Message missing required method field',
+            } as JSONRPCErrorData,
+          },
         };
       }
 
       // Handle special methods directly
       if (message.method === 'get_capabilities') {
         const response = await this.handleGetCapabilities(message);
-        
+
         // Convert null IDs to the generated msgId if needed
         if ('error' in response && response.id === null) {
           response.id = msgId;
         } else if ('result' in response && response.id === null) {
           response.id = msgId;
         }
-        
+
         return response as JSONRPCResponse;
       }
 
       // Handle initialize request directly
       if (message.method === 'initialize') {
         const response = await this.handleInitialize(message);
-        
+
         // Convert null IDs to the generated msgId if needed
         if ('error' in response && response.id === null) {
           response.id = msgId;
         } else if ('result' in response && response.id === null) {
           response.id = msgId;
         }
-        
+
         return response as JSONRPCResponse;
       }
 
       // Handle tools/list requests - gather tools from all servers
       if (message.method === 'tools/list') {
         logger.info('Handling tools/list request');
-        
+
         try {
           // Use the aggregateCollection utility to get tools from all servers
           const allTools = await aggregateCollection(
             this.registry,
             'tools/list',
             'tools',
-            message.params as Record<string, unknown> || {}
+            (message.params as Record<string, unknown>) || {}
           );
-          
+
           // Return all discovered tools
           return createSuccessResponse(msgId, { tools: allTools });
         } catch (error) {
@@ -444,27 +434,29 @@ export class McpProxy extends EventEmitter {
           );
         }
       }
-      
+
       // Handle resources/list - aggregate from all servers
       if (message.method === 'resources/list') {
         logger.info('Handling resources/list request');
-        
+
         try {
           // Use the aggregateCollection utility to get resources from all servers
           const allResources = await aggregateCollection(
             this.registry,
             'resources/list',
             'resources',
-            message.params as Record<string, unknown> || {}
+            (message.params as Record<string, unknown>) || {}
           );
-          
+
           // Create result with optional pagination parameters
           const result = {
             resources: allResources,
             // Pass along nextCursor if it was in the request params
-            ...('nextCursor' in (message.params || {}) ? { nextCursor: message.params?.nextCursor } : {})
+            ...('nextCursor' in (message.params || {})
+              ? { nextCursor: message.params?.nextCursor }
+              : {}),
           };
-          
+
           return createSuccessResponse(msgId, result);
         } catch (error) {
           logger.error('Error handling resources/list request:', error);
@@ -476,97 +468,106 @@ export class McpProxy extends EventEmitter {
           );
         }
       }
-      
+
       // Handle prompts/list - aggregate from all servers
       if (message.method === 'prompts/list') {
         logger.info('Handling prompts/list request');
-        
+
         try {
           // Use the aggregateCollection utility to get prompts from all servers
           const allPrompts = await aggregateCollection(
             this.registry,
             'prompts/list',
             'prompts',
-            message.params as Record<string, unknown> || {}
+            (message.params as Record<string, unknown>) || {}
           );
-          
+
           // Create result with optional pagination parameters
           const result = {
             prompts: allPrompts,
             // Pass along nextCursor if it was in the request params
-            ...('nextCursor' in (message.params || {}) ? { nextCursor: message.params?.nextCursor } : {})
+            ...('nextCursor' in (message.params || {})
+              ? { nextCursor: message.params?.nextCursor }
+              : {}),
           };
-          
+
           return createSuccessResponse(msgId, result);
         } catch (error) {
           logger.error('Error handling prompts/list request:', error);
           return createErrorResponse(
             msgId,
-            -32603, 
+            -32603,
             error instanceof Error ? error.message : 'Unknown error',
             error instanceof Error ? error.stack : 'Unknown error'
           );
         }
       }
-      
+
       // Route tools/call to the appropriate server
-      if (message.method === 'tools/call' && 
-          message.params && 
-          typeof message.params === 'object' &&
-          'name' in message.params) {
-        
+      if (
+        message.method === 'tools/call' &&
+        message.params &&
+        typeof message.params === 'object' &&
+        'name' in message.params
+      ) {
         // Get the tool name
         const toolName = String(message.params.name);
         logger.info(`Handling tool call for ${toolName}`);
-        
-        return await executeWithErrorHandling(async () => {
-          // Special case for echo tool (always available)
-          if (toolName === 'echo') {
-            logger.info('Handling echo tool call directly');
-            
-            // Extract the message from the arguments with proper type checking
-            const args = 'arguments' in message.params && 
-                        message.params.arguments && 
-                        typeof message.params.arguments === 'object' ? 
-                        message.params.arguments : {};
-                        
-            const echoMessage = 'message' in args ? String(args.message) : 'No message provided';
-            
-            // Return the echo response
-            return {
-              content: [
-                {
-                  type: 'text',
-                  text: echoMessage
-                }
-              ]
-            };
-          }
-          
-          try {
-            // Find a server that can handle this tool (will throw if not found)
-            const serverId = await findServerForTool(this.registry, toolName);
-            
-            // Forward the request to the appropriate server
-            logger.info(`Forwarding tool ${toolName} to server ${serverId}`);
-            const result = await this.registry.sendMessage(serverId, message);
-            
-            // Return result
-            return result as Record<string, unknown>;
-          } catch (error) {
-            if (error instanceof McpError && error.code === ErrorCode.TOOL_NOT_FOUND) {
-              // Rethrow tool not found errors to be handled by executeWithErrorHandling
-              throw error;
+
+        return await executeWithErrorHandling(
+          async () => {
+            // Special case for echo tool (always available)
+            if (toolName === 'echo') {
+              logger.info('Handling echo tool call directly');
+
+              // Extract the message from the arguments with proper type checking
+              const args =
+                'arguments' in message.params &&
+                message.params.arguments &&
+                typeof message.params.arguments === 'object'
+                  ? message.params.arguments
+                  : {};
+
+              const echoMessage = 'message' in args ? String(args.message) : 'No message provided';
+
+              // Return the echo response
+              return {
+                content: [
+                  {
+                    type: 'text',
+                    text: echoMessage,
+                  },
+                ],
+              };
             }
-            
-            // For other errors, convert and log
-            const mcpError = toMcpError(error, ErrorCode.INTERNAL_ERROR);
-            mcpError.log('McpProxy');
-            throw mcpError;
-          }
-        }, msgId, 'McpProxy');
+
+            try {
+              // Find a server that can handle this tool (will throw if not found)
+              const serverId = await findServerForTool(this.registry, toolName);
+
+              // Forward the request to the appropriate server
+              logger.info(`Forwarding tool ${toolName} to server ${serverId}`);
+              const result = await this.registry.sendMessage(serverId, message);
+
+              // Return result
+              return result as Record<string, unknown>;
+            } catch (error) {
+              if (error instanceof McpError && error.code === ErrorCode.TOOL_NOT_FOUND) {
+                // Rethrow tool not found errors to be handled by executeWithErrorHandling
+                throw error;
+              }
+
+              // For other errors, convert and log
+              const mcpError = toMcpError(error, ErrorCode.INTERNAL_ERROR);
+              mcpError.log('McpProxy');
+              throw mcpError;
+            }
+          },
+          msgId,
+          'McpProxy'
+        );
       }
-        
+
       // Handle other methods by determining the appropriate server
       const serverId = this.determineServerForMethod(message.method, message.params);
 
@@ -578,9 +579,9 @@ export class McpProxy extends EventEmitter {
             code: -32601,
             message: `Method ${message.method} not supported by any server`,
             data: {
-              details: 'No available server found to handle this method'
-            } as JSONRPCErrorData
-          }
+              details: 'No available server found to handle this method',
+            } as JSONRPCErrorData,
+          },
         };
       }
 
@@ -589,11 +590,11 @@ export class McpProxy extends EventEmitter {
 
       // Ensure response is the correct shape before returning
       const typedResponse = response as Record<string, unknown>;
-      
+
       return {
         jsonrpc: '2.0',
         id: msgId,
-        result: typedResponse
+        result: typedResponse,
       };
     } catch (error) {
       logger.error('Error handling direct message:', error);
@@ -605,9 +606,9 @@ export class McpProxy extends EventEmitter {
           code: -32603,
           message: error instanceof Error ? error.message : 'Internal error',
           data: {
-            details: error instanceof Error ? error.stack : 'Unknown error'
-          } as JSONRPCErrorData
-        }
+            details: error instanceof Error ? error.stack : 'Unknown error',
+          } as JSONRPCErrorData,
+        },
       };
     }
   }
@@ -628,19 +629,18 @@ export class McpProxy extends EventEmitter {
 
     try {
       // Extract requested protocol version with safe type checking
-      const protocolVersion = message.params && 
-        typeof message.params === 'object' && 
-        'protocolVersion' in message.params ? 
-        String(message.params.protocolVersion) : 
-        '2024-11-05';
-      
+      const protocolVersion =
+        message.params && typeof message.params === 'object' && 'protocolVersion' in message.params
+          ? String(message.params.protocolVersion)
+          : '2024-11-05';
+
       // Get all running servers to check their capabilities
       const runningServers = Array.from(this.registry.getServers().entries())
         .filter(([_, config]) => this.registry.isServerRunning(config.name))
         .map(([serverId]) => serverId);
-        
+
       logger.info(`Getting capabilities from servers: ${runningServers.join(', ')}`);
-      
+
       // Create capabilities object with core features always available
       const capabilities: McpCapabilities = {
         core: {
@@ -651,13 +651,13 @@ export class McpProxy extends EventEmitter {
           list: {},
           call: {},
           list_changed: {},
-        }
+        },
       };
-      
+
       // Check for resources and prompts capabilities from all servers
       let hasResources = false;
       let hasPrompts = false;
-      
+
       // Directly check for capabilities via initialize method
       // This is more reliable than get_capabilities for MCP servers
       for (const serverId of runningServers) {
@@ -670,24 +670,25 @@ export class McpProxy extends EventEmitter {
             params: {
               protocolVersion,
               capabilities: message.params?.capabilities || {},
-              clientInfo: message.params?.clientInfo || { name: 'atrax-proxy', version: '0.1.0' }
+              clientInfo: message.params?.clientInfo || { name: 'atrax-proxy', version: '0.1.0' },
             },
           });
-          
+
           // Check if server supports resources
-          if (serverResponse && 
-              typeof serverResponse === 'object' && 
-              'capabilities' in serverResponse && 
-              typeof serverResponse.capabilities === 'object') {
-            
+          if (
+            serverResponse &&
+            typeof serverResponse === 'object' &&
+            'capabilities' in serverResponse &&
+            typeof serverResponse.capabilities === 'object'
+          ) {
             const serverCapabilities = serverResponse.capabilities as Record<string, unknown>;
-            
+
             // Check for resources capability
             if (serverCapabilities && 'resources' in serverCapabilities) {
               hasResources = true;
               logger.info(`Server ${serverId} supports resources`);
             }
-            
+
             // Check for prompts capability
             if (serverCapabilities && 'prompts' in serverCapabilities) {
               hasPrompts = true;
@@ -699,7 +700,7 @@ export class McpProxy extends EventEmitter {
           logger.warn(`Error checking capabilities for server ${serverId}:`, error);
         }
       }
-      
+
       // Add resources capability if any server supports it
       if (hasResources) {
         capabilities.resources = {
@@ -709,7 +710,7 @@ export class McpProxy extends EventEmitter {
         };
         logger.info('Adding resources capability to proxy response');
       }
-      
+
       // Add prompts capability if any server supports it
       if (hasPrompts) {
         capabilities.prompts = {
@@ -729,10 +730,10 @@ export class McpProxy extends EventEmitter {
           protocolVersion,
           serverInfo: {
             name: 'atrax',
-            version: '0.1.0'
+            version: '0.1.0',
           },
-          capabilities
-        }
+          capabilities,
+        },
       };
     } catch (error) {
       logger.error('Error handling initialize request:', error);
@@ -743,9 +744,9 @@ export class McpProxy extends EventEmitter {
           code: -32603,
           message: error instanceof Error ? error.message : 'Internal error',
           data: {
-            details: error instanceof Error ? error.stack : 'Unknown error'
-          } as JSONRPCErrorData
-        }
+            details: error instanceof Error ? error.stack : 'Unknown error',
+          } as JSONRPCErrorData,
+        },
       };
     }
   }
@@ -761,7 +762,7 @@ export class McpProxy extends EventEmitter {
   ): Promise<JSONRPCResponse | JSONRPCErrorObject> {
     // Ensure message has an ID (required for JSON-RPC requests)
     const msgId = message.id ?? crypto.randomUUID();
-    
+
     // Aggregate capabilities from all servers
     const capabilities: McpCapabilities = {
       core: {
@@ -778,7 +779,7 @@ export class McpProxy extends EventEmitter {
     const runningServers = Array.from(this.registry.getServers().entries())
       .filter(([_, config]) => this.registry.isServerRunning(config.name))
       .map(([serverId]) => serverId);
-      
+
     logger.info(`Getting capabilities from servers: ${runningServers.join(', ')}`);
 
     // First try to use initialize to check capabilities (more reliable)
@@ -792,30 +793,31 @@ export class McpProxy extends EventEmitter {
           params: {
             protocolVersion: '2024-11-05',
             capabilities: {},
-            clientInfo: { name: 'atrax-proxy', version: '0.1.0' }
+            clientInfo: { name: 'atrax-proxy', version: '0.1.0' },
           },
         });
-        
+
         // Check if server supports various capabilities
-        if (serverResponse && 
-            typeof serverResponse === 'object' && 
-            'capabilities' in serverResponse && 
-            typeof serverResponse.capabilities === 'object') {
-          
+        if (
+          serverResponse &&
+          typeof serverResponse === 'object' &&
+          'capabilities' in serverResponse &&
+          typeof serverResponse.capabilities === 'object'
+        ) {
           const serverCapabilities = serverResponse.capabilities as Record<string, unknown>;
-          
+
           // Check for resources capability
           if (serverCapabilities && 'resources' in serverCapabilities) {
             hasResources = true;
             logger.info(`Server ${serverId} supports resources (via initialize)`);
           }
-          
+
           // Check for tools capability
           if (serverCapabilities && 'tools' in serverCapabilities) {
             hasTools = true;
             logger.info(`Server ${serverId} supports tools (via initialize)`);
           }
-          
+
           // Check for prompts capability
           if (serverCapabilities && 'prompts' in serverCapabilities) {
             hasPrompts = true;
@@ -825,7 +827,7 @@ export class McpProxy extends EventEmitter {
       } catch (error) {
         // Skip errors - try get_capabilities as fallback
         logger.debug(`Server ${serverId} initialize check failed, trying get_capabilities:`, error);
-        
+
         // Try get_capabilities as fallback
         try {
           const serverResponse = await this.registry.sendMessage(serverId, {
@@ -834,13 +836,13 @@ export class McpProxy extends EventEmitter {
             method: 'get_capabilities',
             params: {},
           });
-          
+
           // Extract capabilities with proper type checking
-          const serverCaps = serverResponse && 
-                            typeof serverResponse === 'object' && 
-                            'capabilities' in serverResponse ? 
-                            serverResponse : { capabilities: undefined };
-  
+          const serverCaps =
+            serverResponse && typeof serverResponse === 'object' && 'capabilities' in serverResponse
+              ? serverResponse
+              : { capabilities: undefined };
+
           // Check if response has capabilities
           if (serverCaps?.capabilities && typeof serverCaps.capabilities === 'object') {
             // Check for resources
@@ -848,13 +850,13 @@ export class McpProxy extends EventEmitter {
               hasResources = true;
               logger.info(`Server ${serverId} supports resources (via get_capabilities)`);
             }
-  
+
             // Check for tools
             if ('tools' in serverCaps.capabilities) {
               hasTools = true;
               logger.info(`Server ${serverId} supports tools (via get_capabilities)`);
             }
-  
+
             // Check for prompts
             if ('prompts' in serverCaps.capabilities) {
               hasPrompts = true;
@@ -874,7 +876,7 @@ export class McpProxy extends EventEmitter {
       call: {},
       list_changed: {},
     };
-    
+
     // Add other capabilities that are supported by at least one server
     if (hasResources) {
       capabilities.resources = {
@@ -918,10 +920,10 @@ export class McpProxy extends EventEmitter {
     // Otherwise, treat as a generic method
     return this.determineServerForGenericMethod(method, params as Record<string, unknown>);
   }
-  
+
   /**
    * Check if a method is one of our known MCP methods with proper typing
-   * 
+   *
    * @param method - Method to check
    */
   private isKnownMethod(method: string): method is keyof MethodParams {
@@ -930,7 +932,7 @@ export class McpProxy extends EventEmitter {
 
   /**
    * Determine which server should handle a method with proper typing
-   * 
+   *
    * @param method - Typed method name
    * @param params - Method parameters with proper type
    */
@@ -948,10 +950,10 @@ export class McpProxy extends EventEmitter {
 
     return undefined;
   }
-  
+
   /**
    * Determine which server should handle a method that's not in our type definitions
-   * 
+   *
    * @param method - Method name
    * @param params - Method parameters
    */
@@ -966,7 +968,7 @@ export class McpProxy extends EventEmitter {
         return serverId;
       }
     }
-    
+
     return undefined;
   }
 
@@ -980,29 +982,29 @@ export class McpProxy extends EventEmitter {
     try {
       // Log all client messages for debugging
       logger.info(`Client message from ${clientId}:`, message);
-      
+
       this.emit(ProxyEvent.CLIENT_MESSAGE, { clientId, message });
-      
+
       // Handle messages with methods (requests)
       if ('method' in message) {
         const request = message as JSONRPCRequest;
-        
+
         // Ensure message has an ID (required for JSON-RPC requests)
         const msgId = request.id ?? crypto.randomUUID();
-        
+
         // Handle special methods directly
         if (request.method === 'tools/list') {
           logger.info(`Handling tools/list request from client ${clientId}`);
-          
+
           try {
             // Use the aggregateCollection utility to get tools from all servers
             const allTools = await aggregateCollection(
               this.registry,
               'tools/list',
               'tools',
-              request.params as Record<string, unknown> || {}
+              (request.params as Record<string, unknown>) || {}
             );
-            
+
             // Always add the echo tool (built-in)
             allTools.push({
               name: 'echo',
@@ -1012,19 +1014,19 @@ export class McpProxy extends EventEmitter {
                 properties: {
                   message: {
                     type: 'string',
-                    description: 'The message to echo back'
-                  }
+                    description: 'The message to echo back',
+                  },
                 },
-                required: ['message']
+                required: ['message'],
               },
-              _serverName: 'atrax'
+              _serverName: 'atrax',
             });
-            
+
             logger.info(`Responding with ${allTools.length} tools for client ${clientId}`);
-            
+
             // Remove server info before sending to client
             const responseTools = allTools.map(({ _serverName, ...tool }) => tool);
-            
+
             // Create success response with the tools
             const response = createSuccessResponse(msgId, { tools: responseTools });
             await this.sendMessage(clientId, response);
@@ -1040,32 +1042,34 @@ export class McpProxy extends EventEmitter {
           }
           return;
         }
-        
+
         // Handle resources/list like tools/list - aggregate resources from all servers
         if (request.method === 'resources/list') {
           logger.info(`Handling resources/list request from client ${clientId}`);
-          
+
           try {
             // Use the aggregateCollection utility to get resources from all servers
             const allResources = await aggregateCollection(
               this.registry,
               'resources/list',
               'resources',
-              request.params as Record<string, unknown> || {}
+              (request.params as Record<string, unknown>) || {}
             );
-            
+
             logger.info(`Responding with ${allResources.length} resources for client ${clientId}`);
-            
+
             // Remove server info before sending to client
             const responseResources = allResources.map(({ _serverName, ...resource }) => resource);
-            
+
             // Create result with optional pagination parameters
             const result = {
               resources: responseResources,
               // Pass along nextCursor if it was in the request params
-              ...('nextCursor' in (request.params || {}) ? { nextCursor: request.params?.nextCursor } : {})
+              ...('nextCursor' in (request.params || {})
+                ? { nextCursor: request.params?.nextCursor }
+                : {}),
             };
-            
+
             // Create success response with the resources
             const response = createSuccessResponse(msgId, result);
             await this.sendMessage(clientId, response);
@@ -1081,32 +1085,34 @@ export class McpProxy extends EventEmitter {
           }
           return;
         }
-        
+
         // Handle prompts/list like tools/list - aggregate prompts from all servers
         if (request.method === 'prompts/list') {
           logger.info(`Handling prompts/list request from client ${clientId}`);
-          
+
           try {
             // Use the aggregateCollection utility to get prompts from all servers
             const allPrompts = await aggregateCollection(
               this.registry,
               'prompts/list',
               'prompts',
-              request.params as Record<string, unknown> || {}
+              (request.params as Record<string, unknown>) || {}
             );
-            
+
             logger.info(`Responding with ${allPrompts.length} prompts for client ${clientId}`);
-            
+
             // Remove server info before sending to client
             const responsePrompts = allPrompts.map(({ _serverName, ...prompt }) => prompt);
-            
+
             // Create result with optional pagination parameters
             const result = {
               prompts: responsePrompts,
               // Pass along nextCursor if it was in the request params
-              ...('nextCursor' in (request.params || {}) ? { nextCursor: request.params?.nextCursor } : {})
+              ...('nextCursor' in (request.params || {})
+                ? { nextCursor: request.params?.nextCursor }
+                : {}),
             };
-            
+
             // Create success response with the prompts
             const response = createSuccessResponse(msgId, result);
             await this.sendMessage(clientId, response);
@@ -1122,35 +1128,38 @@ export class McpProxy extends EventEmitter {
           }
           return;
         }
-        
+
         // Handle prompts/get - route to appropriate server based on prompt name
-        if (request.method === 'prompts/get' && 
-            request.params && 
-            typeof request.params === 'object' &&
-            'name' in request.params) {
-          
+        if (
+          request.method === 'prompts/get' &&
+          request.params &&
+          typeof request.params === 'object' &&
+          'name' in request.params
+        ) {
           const promptName = String(request.params.name);
-          logger.info(`Handling prompts/get request from client ${clientId} for prompt ${promptName}`);
-          
+          logger.info(
+            `Handling prompts/get request from client ${clientId} for prompt ${promptName}`
+          );
+
           try {
             // Find a server that has this prompt
             const targetServer = await findServerForPrompt(this.registry, promptName);
-            
+
             // If we found a server, forward the request
             if (targetServer) {
               logger.info(`Forwarding prompt ${promptName} request to server ${targetServer}`);
               const result = await this.registry.sendMessage(targetServer, request);
-              
+
               // Process result to ensure it follows the MCP protocol format
               let processedResult = result;
-              
+
               // Convert from {prompt: {template: "..."}} format to {messages: [{role: "assistant", ...}]} format if needed
               if (result && typeof result === 'object' && 'prompt' in result) {
                 const prompt = result.prompt as Record<string, unknown>;
                 if (prompt && typeof prompt === 'object' && 'template' in prompt) {
                   const template = prompt.template as string;
                   const description = prompt.description as string | undefined;
-                  
+
                   // Transform to the format expected by clients
                   processedResult = {
                     description: description,
@@ -1159,21 +1168,26 @@ export class McpProxy extends EventEmitter {
                         role: 'assistant',
                         content: {
                           type: 'text',
-                          text: template
-                        }
-                      }
-                    ]
+                          text: template,
+                        },
+                      },
+                    ],
                   };
-                  logger.info(`Transformed prompt response for ${promptName} to MCP-compliant format`);
+                  logger.info(
+                    `Transformed prompt response for ${promptName} to MCP-compliant format`
+                  );
                 }
               }
-              
+
               // Create successful response with the processed result
-              const response = createSuccessResponse(msgId, processedResult as Record<string, unknown>);
+              const response = createSuccessResponse(
+                msgId,
+                processedResult as Record<string, unknown>
+              );
               await this.sendMessage(clientId, response);
               return;
             }
-            
+
             // If no server was found for this prompt
             logger.warn(`No server found to handle prompt ${promptName}`);
             const errorResponse = createErrorResponse(
@@ -1182,70 +1196,73 @@ export class McpProxy extends EventEmitter {
               `Prompt ${promptName} not found on any server`,
               'No server found that can handle this prompt'
             );
-            
+
             await this.sendMessage(clientId, errorResponse);
           } catch (error) {
             logger.error(`Error handling prompts/get request for ${promptName}:`, error);
             const errorResponse = createErrorResponse(
-              msgId, 
+              msgId,
               -32603,
               error instanceof Error ? error.message : 'Unknown error',
               error instanceof Error ? error.stack : 'Unknown error'
             );
-            
+
             await this.sendMessage(clientId, errorResponse);
           }
           return;
         }
-        
+
         // Handle tools/call - route to appropriate server
-        if (request.method === 'tools/call' && 
-            request.params && 
-            typeof request.params === 'object' &&
-            'name' in request.params) {
-          
+        if (
+          request.method === 'tools/call' &&
+          request.params &&
+          typeof request.params === 'object' &&
+          'name' in request.params
+        ) {
           const toolName = String(request.params.name);
           logger.info(`Handling tool call from client ${clientId} for tool ${toolName}`);
-          
+
           try {
             // Special case for the built-in echo tool
             if (toolName === 'echo') {
               // Extract the message from the arguments with proper type checking
-              const args = 'arguments' in request.params && 
-                          request.params.arguments && 
-                          typeof request.params.arguments === 'object' ? 
-                          request.params.arguments : {};
-                          
+              const args =
+                'arguments' in request.params &&
+                request.params.arguments &&
+                typeof request.params.arguments === 'object'
+                  ? request.params.arguments
+                  : {};
+
               const echoMessage = 'message' in args ? String(args.message) : 'No message provided';
-              
+
               // Create success response for echo tool
               const response = createSuccessResponse(msgId, {
                 content: [
                   {
                     type: 'text',
-                    text: echoMessage
-                  }
-                ]
+                    text: echoMessage,
+                  },
+                ],
               });
-              
+
               await this.sendMessage(clientId, response);
               return;
             }
-            
+
             // Find a server that can handle this tool
             const targetServer = await findServerForTool(this.registry, toolName);
-            
+
             // If we found a server, forward the request
             if (targetServer) {
               logger.info(`Forwarding tool ${toolName} call to server ${targetServer}`);
               const result = await this.registry.sendMessage(targetServer, request);
-              
+
               // Create success response with the result
-              const response = createSuccessResponse(msgId, result as Record<string, unknown>);              
+              const response = createSuccessResponse(msgId, result as Record<string, unknown>);
               await this.sendMessage(clientId, response);
               return;
             }
-            
+
             // If no server was found for this tool
             logger.warn(`No server found to handle tool ${toolName}`);
             const errorResponse = createErrorResponse(
@@ -1254,7 +1271,7 @@ export class McpProxy extends EventEmitter {
               `Tool ${toolName} not found on any server`,
               'No server found that can handle this tool'
             );
-            
+
             await this.sendMessage(clientId, errorResponse);
           } catch (error) {
             logger.error(`Error handling tool call for ${toolName}:`, error);
@@ -1264,59 +1281,59 @@ export class McpProxy extends EventEmitter {
               error instanceof Error ? error.message : 'Unknown error',
               error instanceof Error ? error.stack : 'Unknown error'
             );
-            
+
             await this.sendMessage(clientId, errorResponse);
           }
           return;
         }
-        
+
         // Handle initialize requests directly
         if (request.method === 'initialize') {
           logger.info(`Handling initialize request from client ${clientId}`);
           const response = await this.handleInitialize(request);
-          
+
           // Convert null IDs to the generated msgId
           if ('error' in response && response.id === null) {
             response.id = msgId;
           }
-          
+
           await this.sendMessage(clientId, response);
           return;
         }
-        
+
         // Handle get_capabilities requests directly
         if (request.method === 'get_capabilities') {
           logger.info(`Handling get_capabilities request from client ${clientId}`);
           const response = await this.handleGetCapabilities(request);
-          
+
           // Convert null IDs to the generated msgId
           if ('error' in response && response.id === null) {
             response.id = msgId;
           }
-          
+
           await this.sendMessage(clientId, response);
           return;
         }
-        
+
         // For other requests, determine which server should handle it
         const serverId = this.determineServerForMethod(request.method, request.params);
-        
+
         if (serverId) {
           logger.info(`Forwarding ${request.method} request to server ${serverId}`);
           const result = await this.registry.sendMessage(serverId, request);
-          
+
           // Send response back to client with proper typing
           const response: JSONRPCResponse = {
             jsonrpc: '2.0',
             id: msgId,
-            result: result as Record<string, unknown>
+            result: result as Record<string, unknown>,
           };
-          
+
           await this.sendMessage(clientId, response);
         } else {
           logger.warn(`No server found to handle method ${request.method}`);
-          
-          // Send error response 
+
+          // Send error response
           const errorResponse: JSONRPCErrorObject = {
             jsonrpc: '2.0',
             id: msgId,
@@ -1324,24 +1341,24 @@ export class McpProxy extends EventEmitter {
               code: -32601,
               message: `Method ${request.method} not supported by any server`,
               data: {
-                details: 'No available server found to handle this method'
-              } as JSONRPCErrorData
-            }
+                details: 'No available server found to handle this method',
+              } as JSONRPCErrorData,
+            },
           };
-          
+
           await this.sendMessage(clientId, errorResponse);
         }
       }
       // Handle other message types if needed (notifications, etc.)
     } catch (error) {
       logger.error(`Error handling client message from ${clientId}:`, error);
-      
+
       // If it's a request, send an error response
       if ('id' in message) {
         try {
           // Ensure id is never null when sending
           const msgId = message.id ?? crypto.randomUUID();
-          
+
           // Create error response
           const errorResponse: JSONRPCErrorObject = {
             jsonrpc: '2.0',
@@ -1350,11 +1367,11 @@ export class McpProxy extends EventEmitter {
               code: -32603,
               message: error instanceof Error ? error.message : 'Internal error',
               data: {
-                details: error instanceof Error ? error.stack : 'Unknown error'
-              } as JSONRPCErrorData
-            }
+                details: error instanceof Error ? error.stack : 'Unknown error',
+              } as JSONRPCErrorData,
+            },
           };
-          
+
           await this.sendMessage(clientId, errorResponse);
         } catch (sendError) {
           logger.error(`Failed to send error response to client ${clientId}:`, sendError);
@@ -1369,14 +1386,15 @@ export class McpProxy extends EventEmitter {
    * @param clientId - Client ID
    * @param message - Message to send
    */
-  async sendMessage(clientId: string, message: JSONRPCResponse | JSONRPCErrorObject | JSONRPCNotification): Promise<void> {
+  async sendMessage(
+    clientId: string,
+    message: JSONRPCResponse | JSONRPCErrorObject | JSONRPCNotification
+  ): Promise<void> {
     const transport = this.clientTransports.get(clientId);
     if (!transport) {
-      throw new McpError(
-        ErrorCode.TRANSPORT_ERROR,
-        `Client ${clientId} not connected`,
-        { details: 'Unable to send message to client: transport not found' }
-      );
+      throw new McpError(ErrorCode.TRANSPORT_ERROR, `Client ${clientId} not connected`, {
+        details: 'Unable to send message to client: transport not found',
+      });
     }
     // Ensure the id is never null when sending to the client
     if ('error' in message && message.id === null) {
@@ -1384,7 +1402,7 @@ export class McpProxy extends EventEmitter {
     } else if ('result' in message && message.id === null) {
       message.id = crypto.randomUUID();
     }
-    
+
     try {
       await transport.send(message as JSONRPCMessage);
     } catch (error) {

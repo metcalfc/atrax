@@ -69,14 +69,14 @@ export function createAuthMiddleware(
   authProvider: AuthProvider,
   options: AuthMiddlewareOptions = {}
 ): (req: Request, res: Response, next: NextFunction) => Promise<void | Response> {
-  const { 
-    bypassPaths = [], 
+  const {
+    bypassPaths = [],
     throwOnFailure = true,
     enableCors = true, // Default to enabling CORS for better compatibility
     corsOrigin = '*',
     corsMethods = 'GET, POST, OPTIONS',
     corsHeaders = 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
-    logAuth = process.env.NODE_ENV === 'development' || process.env.DEBUG_AUTH === 'true'
+    logAuth = process.env.NODE_ENV === 'development' || process.env.DEBUG_AUTH === 'true',
   } = options;
 
   // Essential endpoints are always bypassed
@@ -90,9 +90,12 @@ export function createAuthMiddleware(
   if (!allBypassPaths.includes('/auth')) {
     allBypassPaths.push('/auth');
   }
-  
+
   // Debug endpoints are only accessible in development mode
-  if (process.env.NODE_ENV === 'development' && !allBypassPaths.some(path => path.startsWith('/debug/'))) {
+  if (
+    process.env.NODE_ENV === 'development' &&
+    !allBypassPaths.some(path => path.startsWith('/debug/'))
+  ) {
     allBypassPaths.push('/debug/');
     logger.info('Debug endpoints are accessible in development mode');
   }
@@ -103,7 +106,7 @@ export function createAuthMiddleware(
       res.setHeader('Access-Control-Allow-Origin', corsOrigin);
       res.setHeader('Access-Control-Allow-Headers', corsHeaders);
       res.setHeader('Access-Control-Allow-Methods', corsMethods);
-      
+
       // Handle OPTIONS requests for CORS preflight
       if (req.method === 'OPTIONS') {
         return res.status(200).end();
@@ -113,10 +116,10 @@ export function createAuthMiddleware(
     // Skip authentication for bypassed paths
     if (allBypassPaths.some(path => req.path === path || req.path.startsWith(path))) {
       // For health and debug endpoints, set system authentication
-      req.auth = { 
-        authenticated: true, 
-        userId: 'system', 
-        roles: ['system'] 
+      req.auth = {
+        authenticated: true,
+        userId: 'system',
+        roles: ['system'],
       };
       return next();
     }
@@ -132,9 +135,9 @@ export function createAuthMiddleware(
       }
 
       if (throwOnFailure) {
-        return res.status(401).json({ 
+        return res.status(401).json({
           error: 'Authentication required',
-          message: 'Please provide a valid token via Bearer auth header or token query parameter'
+          message: 'Please provide a valid token via Bearer auth header or token query parameter',
         });
       }
 
@@ -175,7 +178,7 @@ export function createAuthMiddleware(
       } else {
         logger.debug(`Authenticated user: ${authResult.userId}`);
       }
-      
+
       next();
     } catch (error) {
       logger.error('Authentication error:', error);

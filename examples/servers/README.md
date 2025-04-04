@@ -101,7 +101,7 @@ server.setRequestHandler(GetPromptRequestSchema, async request => {
       ]
     };
   }
-  
+
   // Error format for prompts not found
   return {
     error: {

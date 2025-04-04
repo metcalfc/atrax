@@ -1,13 +1,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { 
-  AtraxConfig, 
-  McpServerConfig, 
+import {
+  AtraxConfig,
+  McpServerConfig,
   TransportType,
   AuthConfig,
   isBasicAuth,
   isTokenAuth,
-  isOAuth2Auth
+  isOAuth2Auth,
 } from '../types/config.js';
 import { logger } from '../utils/logger.js';
 
@@ -34,16 +34,18 @@ export async function loadConfig(configPath: string): Promise<AtraxConfig> {
 
     // Process auth configuration and handle environment variable replacements
     let authConfig: AuthConfig = { type: 'none' };
-    
+
     if (userConfig.auth) {
       authConfig = {
         type: userConfig.auth.type || 'none',
-        ...(userConfig.auth.type !== 'none' && userConfig.auth.options ? { 
-          options: processAuthOptions(userConfig.auth.type, userConfig.auth.options) 
-        } : {})
+        ...(userConfig.auth.type !== 'none' && userConfig.auth.options
+          ? {
+              options: processAuthOptions(userConfig.auth.type, userConfig.auth.options),
+            }
+          : {}),
       } as AuthConfig;
     }
-    
+
     // Merge with default config
     const config: AtraxConfig = {
       ...DEFAULT_CONFIG,
@@ -62,7 +64,7 @@ export async function loadConfig(configPath: string): Promise<AtraxConfig> {
     for (const [name, serverConfig] of Object.entries(config.mcpServers)) {
       // Process server configuration to handle environment variables in paths
       const processedConfig = { ...serverConfig };
-      
+
       // Handle environment variables in args if present
       // Need type assertion because Omit<McpServerConfig, 'name'> doesn't guarantee args exists
       const configArgs = (serverConfig as any).args;
@@ -84,7 +86,7 @@ export async function loadConfig(configPath: string): Promise<AtraxConfig> {
           return arg;
         });
       }
-      
+
       mcpServers[name] = {
         ...processedConfig,
         name,
@@ -147,17 +149,17 @@ export async function findAndLoadConfig(): Promise<AtraxConfig> {
  */
 function processAuthOptions(authType: string, options: any): any {
   const processedOptions = { ...options };
-  
+
   // Handle token authentication specifically
   if (authType === 'token' && typeof options.token === 'string') {
     // Check if token value uses environment variable syntax
     if (options.token.startsWith('${') && options.token.endsWith('}')) {
       // Extract environment variable name
       const envVarName = options.token.slice(2, -1);
-      
+
       // Get value from environment
       const envValue = process.env[envVarName];
-      
+
       if (!envValue) {
         logger.warn(`Environment variable ${envVarName} not set for token authentication`);
       } else {
@@ -166,9 +168,9 @@ function processAuthOptions(authType: string, options: any): any {
       }
     }
   }
-  
+
   // Future: handle other auth types that might need environment variable processing
-  
+
   return processedOptions;
 }
 
@@ -241,7 +243,11 @@ export function validateConfig(config: AtraxConfig): void {
       }
     } else if (isOAuth2Auth(config.auth)) {
       // OAuth2 requires clientId, clientSecret, and tokenUrl
-      if (!config.auth.options.clientId || !config.auth.options.clientSecret || !config.auth.options.tokenUrl) {
+      if (
+        !config.auth.options.clientId ||
+        !config.auth.options.clientSecret ||
+        !config.auth.options.tokenUrl
+      ) {
         throw new Error('OAuth2 authentication requires clientId, clientSecret, and tokenUrl');
       }
     }

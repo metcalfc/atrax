@@ -11,23 +11,23 @@ export default function createTokenMiddleware(token) {
       res.status(200).end();
       return;
     }
-    
+
     // Allow access to health and debug endpoints without authentication
     if (req.path === '/health' || req.path.startsWith('/debug/')) {
       req.auth = { authenticated: true, userId: 'system', roles: ['admin'] };
       next();
       return;
     }
-    
+
     // Extract bearer token from Authorization header
     const authHeader = req.headers.authorization;
     const queryToken = req.query.token;
-    
+
     console.log('Auth check - Headers:', req.headers);
     console.log('Auth check - Query params:', req.query);
-    
+
     let isAuthenticated = false;
-    
+
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const providedToken = authHeader.slice(7);
       isAuthenticated = providedToken === token;
@@ -36,23 +36,23 @@ export default function createTokenMiddleware(token) {
       isAuthenticated = queryToken === token;
       console.log(`Token from query: ${queryToken.substring(0, 8)}... authenticated: ${isAuthenticated}`);
     }
-    
+
     if (isAuthenticated) {
       // Set auth info on request
-      req.auth = { 
-        authenticated: true, 
-        userId: 'inspector-user', 
-        roles: ['user'] 
+      req.auth = {
+        authenticated: true,
+        userId: 'inspector-user',
+        roles: ['user']
       };
       next();
     } else {
       // Set CORS headers
       res.setHeader('Access-Control-Allow-Origin', '*');
-      
+
       // Unauthorized
-      res.status(401).json({ 
-        error: 'Authentication required', 
-        message: 'Please provide a valid token via Bearer auth header or token query parameter' 
+      res.status(401).json({
+        error: 'Authentication required',
+        message: 'Please provide a valid token via Bearer auth header or token query parameter'
       });
     }
   };
