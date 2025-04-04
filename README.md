@@ -60,6 +60,7 @@ npm run test:smoke
 - **[TOKEN_AUTH.md](./docs/TOKEN_AUTH.md)**: Token authentication guide and usage
 - **[DIRENV.md](./docs/DIRENV.md)**: Using direnv for environment management
 - **[CLAUDE.md](./CLAUDE.md)**: Quick reference for common commands
+- **[VERSION_MANAGEMENT.md](./docs/VERSION_MANAGEMENT.md)**: Guidelines for version management
 
 ## Examples
 
@@ -79,7 +80,7 @@ npm run http-echo-server
 
 # Client examples
 npm run echo-client      # Connect to STDIO Echo server
-npm run memory-client    # Connect to STDIO Memory server  
+npm run memory-client    # Connect to STDIO Memory server
 npm run http-echo-client # Connect to HTTP/SSE Echo server
 ```
 

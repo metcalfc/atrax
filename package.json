@@ -8,6 +8,8 @@
     "atrax": "dist/src/cli.js"
   },
   "scripts": {
+    "bump:logo": "replace 'v[0-9]+\\.[0-9]+\\.[0-9]+' \"v$npm_package_version\" ./ascii_logo.txt",
+    "bump:readme": "replace 'v[0-9]+\\.[0-9]+\\.[0-9]+' \"v$npm_package_version\" ./README.md ./SECURITY.md",
     "build": "tsc",
     "start": "node dist/src/index.js",
     "dev": "nodemon --exec ts-node --esm src/index.ts",
@@ -27,6 +29,9 @@
     "serve:auth": "bash scripts/start-with-auth.sh",
     "build:test": "ATRAX_ROOT=\"$(pwd)\" PORT=4000 MCP_TOKEN=${MCP_TOKEN:-test-token-123456} node dist/src/cli.js serve -f examples/test-config.json",
     "test:smoke": "bash tests/smoke/test-atrax.sh",
+    "test:version-bump": "bash scripts/test-version-bump.sh",
+    "version": "npm run bump:logo && npm run bump:readme && git add ./ascii_logo.txt ./README.md ./SECURITY.md",
+    "postversion": "git push && git push --tags",
     "inspect": "npx @modelcontextprotocol/inspector node dist/src/cli.js serve -f examples/test-config.json",
     "build:inspect": "npm run build && npm run inspect",
     "memory-server": "node examples/servers/scripts/memory-server.js",
@@ -64,6 +69,7 @@
     "nodemon": "^3.1.9",
     "pre-commit": "^1.2.2",
     "prettier": "^3.1.0",
+    "replace": "^1.2.2",
     "ts-jest": "^29.3.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
