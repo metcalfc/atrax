@@ -1,0 +1,50 @@
+graph TD
+    subgraph "Clients"
+        C1[Web Client]
+        C2[CLI Client]
+        C3[Other Clients]
+    end
+
+    subgraph "Atrax Proxy"
+        AP[Atrax Proxy Service]
+        subgraph "Transport Handlers"
+            TH1[HTTP/SSE Transport]
+            TH2[STDIO Transport]
+            TH3[Docker Transport]
+        end
+        AA[Authentication]
+        CR[Conflict Resolution]
+        RA[Resource Aggregation]
+    end
+
+    subgraph "MCP Servers"
+        MCP1[MCP Server 1]
+        MCP2[MCP Server 2]
+        MCP3[MCP Server 3]
+    end
+
+    C1 --> TH1
+    C2 --> TH2
+    C3 --> TH1
+
+    TH1 --> AA
+    TH2 --> AA
+    TH3 --> AA
+
+    AA --> AP
+    AP --> CR
+    AP --> RA
+
+    RA --> MCP1
+    RA --> MCP2
+    RA --> MCP3
+
+    classDef clients fill:#d1f0ff,stroke:#333,stroke-width:1px;
+    classDef proxy fill:#ffe6cc,stroke:#333,stroke-width:1px;
+    classDef servers fill:#d5e8d4,stroke:#333,stroke-width:1px;
+    classDef transport fill:#fff2cc,stroke:#333,stroke-width:1px;
+
+    class C1,C2,C3 clients;
+    class AP,AA,CR,RA proxy;
+    class MCP1,MCP2,MCP3 servers;
+    class TH1,TH2,TH3 transport;
