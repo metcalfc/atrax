@@ -1,0 +1,49 @@
+{
+  "port": 4000,
+  "host": "localhost",
+  "auth": {
+    "type": "none"
+  },
+  "mcpServers": {
+    "filesystem": {
+      "transportType": "docker",
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--mount",
+        "type=bind,src=/Users/metcalfc/src,dst=/projects/src",
+        "mcp/filesystem",
+        "/projects"
+      ],
+      "description": "File system MCP server",
+      "tags": ["filesystem", "storage"]
+    },
+    "git": {
+      "transportType": "docker",
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-e",
+        "GIT_USER_NAME=\"Chad Metcalf\"",
+        "-e",
+        "GIT_USER_EMAIL=metcalfc@gmail.com",
+        "--mount",
+        "type=bind,src=/Users/metcalfc/src,dst=/projects/src",
+        "metcalfc/mcp-git-test:fixed"
+      ],
+      "description": "Git MCP server",
+      "tags": ["git", "version-control"]
+    },
+    "memory": {
+      "transportType": "docker",
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "mcp/memory"],
+      "description": "In-memory MCP server",
+      "tags": ["memory", "storage"]
+    }
+  }
+}

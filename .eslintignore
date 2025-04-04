@@ -1,0 +1,26 @@
+# Build output
+dist/
+build/
+
+# Node modules
+node_modules/
+
+# Configuration files
+*.config.js
+*.config.mjs
+*.config.cjs
+jest.setup.*
+
+# Scripts directory (handled separately)
+scripts/
+
+# Examples directory
+examples/
+
+# Test fixtures and coverage
+coverage/
+tests/fixtures/
+
+# Cache and temp files
+.cache/
+.tmp/

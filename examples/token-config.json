@@ -1,0 +1,32 @@
+{
+  "port": 4000,
+  "host": "localhost",
+  "auth": {
+    "type": "token",
+    "options": {
+      "token": "${MCP_TOKEN}"
+    }
+  },
+  "mcpServers": {
+    "memory": {
+      "transportType": "stdio",
+      "command": "node",
+      "args": ["examples/servers/scripts/memory-server.js"],
+      "description": "Memory-based MCP server",
+      "tags": ["memory", "test"]
+    },
+    "echo": {
+      "transportType": "stdio",
+      "command": "node",
+      "args": ["examples/servers/scripts/echo-server.js"],
+      "description": "Echo MCP server",
+      "tags": ["echo", "test"]
+    },
+    "http-echo": {
+      "transportType": "http",
+      "url": "http://localhost:4001",
+      "description": "HTTP Echo MCP server",
+      "tags": ["echo", "http", "sse", "test"]
+    }
+  }
+}
